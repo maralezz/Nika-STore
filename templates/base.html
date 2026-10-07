@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ru" class="scroll-smooth">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}NIKA Сантехника — Премиальная сантехника{% endblock %}</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Tailwind 4 Browser (работает в РФ) -->
+<script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+
+<style type="text/tailwindcss">
+  @theme {
+    --color-ink-900: #071842;
+    --color-ink-800: #0c2472;
+    --color-ink-700: #1e3a8a;
+    --color-ink-600: #1e40af;
+    --color-ink-500: #2563eb;
+    --color-ink-400: #3b82f6;
+    --color-ink-300: #60a5fa;
+    --color-ink-200: #93c5fd;
+  }
+</style>
+
+<style>
+    body { font-family: 'Inter', sans-serif; overflow-x: hidden; background: #071842; position: relative; }
+
+    .bg-mesh {
+        position: fixed; inset: 0; z-index: -2;
+        background:
+            radial-gradient(ellipse at 20% 10%, rgba(59,130,246,0.35), transparent 50%),
+            radial-gradient(ellipse at 80% 30%, rgba(37,99,235,0.45), transparent 55%),
+            radial-gradient(ellipse at 50% 80%, rgba(96,165,250,0.25), transparent 50%),
+            linear-gradient(180deg, #071842 0%, #0c2472 40%, #0a1a52 100%);
+    }
+
+    .orb { position: fixed; border-radius: 50%; filter: blur(90px); z-index: -1; pointer-events: none; }
+    .orb-1 { width: 500px; height: 500px; background: rgba(59,130,246,0.5); top: 5%; left: -10%; animation: float 14s ease-in-out infinite; }
+    .orb-2 { width: 400px; height: 400px; background: rgba(96,165,250,0.4); top: 40%; right: -8%; animation: float 18s ease-in-out infinite; }
+    .orb-3 { width: 600px; height: 600px; background: rgba(30,64,175,0.55); bottom: -15%; left: 30%; animation: float 20s ease-in-out infinite; }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0) translateX(0); }
+        50% { transform: translateY(-30px) translateX(20px); }
+    }
+
+    .grid-pattern {
+        position: fixed; inset: 0; z-index: -1; opacity: 0.05;
+        background-image:
+            linear-gradient(rgba(255,255,255,0.4) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.4) 1px, transparent 1px);
+        background-size: 60px 60px;
+        mask-image: radial-gradient(ellipse at 50% 40%, black 30%, transparent 75%);
+        -webkit-mask-image: radial-gradient(ellipse at 50% 40%, black 30%, transparent 75%);
+    }
+
+    .font-serif { letter-spacing: 0.02em; }
+
+    .hover-underline { position: relative; }
+    .hover-underline::after {
+        content: ''; position: absolute; left: 0; bottom: -3px;
+        width: 0; height: 1px; background: #fff; transition: width .35s cubic-bezier(.2,.8,.2,1);
+    }
+    .hover-underline:hover::after { width: 100%; }
+
+    .img-zoom { overflow: hidden; }
+    .img-zoom img, .img-zoom > div { transition: transform .9s cubic-bezier(.2,.8,.2,1); }
+    .img-zoom:hover img, .img-zoom:hover > div { transform: scale(1.08); }
+
+    .glass {
+        background: rgba(255,255,255,0.06);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+    .glass:hover {
+        background: rgba(255,255,255,0.09);
+        border-color: rgba(255,255,255,0.25);
+    }
+
+    .btn-primary {
+        position: relative; background: #fff; color: #0c2472; overflow: hidden;
+        transition: color .4s ease; font-weight: 600;
+    }
+    .btn-primary::before {
+        content: ''; position: absolute; inset: 0;
+        background: #60a5fa; transform: translateY(101%);
+        transition: transform .4s cubic-bezier(.2,.8,.2,1);
+    }
+    .btn-primary:hover::before { transform: translateY(0); }
+    .btn-primary:hover { color: #fff; }
+    .btn-primary > span { position: relative; z-index: 1; }
+
+    .btn-ghost {
+        position: relative; overflow: hidden;
+        border: 1px solid rgba(255,255,255,0.25);
+        transition: color .4s ease, border-color .4s ease;
+    }
+    .btn-ghost::before {
+        content: ''; position: absolute; inset: 0;
+        background: #fff; transform: translateY(101%);
+        transition: transform .4s cubic-bezier(.2,.8,.2,1);
+    }
+    .btn-ghost:hover::before { transform: translateY(0); }
+    .btn-ghost:hover { color: #0c2472; border-color: #fff; }
+    .btn-ghost > span { position: relative; z-index: 1; }
+
+    .reveal { opacity: 0; transform: translateY(40px); transition: all 1s cubic-bezier(.2,.8,.2,1); }
+    .reveal.active { opacity: 1; transform: translateY(0); }
+
+    .gradient-line {
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+        height: 1px;
+    }
+
+    .marquee-track { display: flex; width: max-content; animation: marquee 40s linear infinite; }
+    .marquee-track:hover { animation-play-state: paused; }
+
+    @keyframes marquee {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-50%); }
+    }
+
+    @keyframes fade-up {
+        0% { opacity: 0; transform: translateY(30px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-fade-up { animation: fade-up .8s cubic-bezier(.2,.8,.2,1) forwards; opacity: 0; }
+    .animate-fade-in { animation: fade-up .6s ease forwards; opacity: 0; }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #071842; }
+    ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #60a5fa; }
+
+    .page-loader {
+        position: fixed; inset: 0; background: #071842; z-index: 9999;
+        display: flex; align-items: center; justify-content: center;
+        transition: opacity .6s ease, visibility .6s ease;
+    }
+    .page-loader.hidden { opacity: 0; visibility: hidden; }
+    .loader-text {
+        font-family: 'Playfair Display', serif; letter-spacing: 0.5em;
+        color: #fff; font-size: 26px;
+        animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity: 0.3 } 50% { opacity: 1 } }
+
+    .spotlight {
+        position: fixed; pointer-events: none;
+        width: 600px; height: 600px; border-radius: 50%;
+        background: radial-gradient(circle, rgba(96,165,250,0.15), transparent 70%);
+        transform: translate(-50%, -50%); transition: opacity .3s ease;
+        z-index: 0;
+    }
+</style>
+</head>
+<body class="text-white font-sans antialiased min-h-screen flex flex-col" style="background:#071842; color:#fff; font-family:'Inter',sans-serif;">
+
+<div class="bg-mesh"></div>
+<div class="grid-pattern"></div>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+<div class="spotlight" id="spotlight"></div>
+
+<div class="page-loader" id="pageLoader">
+  <div class="loader-text">NIKA</div>
+</div>
+
+<!-- Бегущая строка -->
+<div style="border-bottom:1px solid rgba(255,255,255,0.1); overflow:hidden; position:relative; z-index:10; background:rgba(255,255,255,0.03);">
+  <div class="marquee-track" style="padding:12px 0; font-size:10px; letter-spacing:0.4em; color:#93c5fd; text-transform:uppercase;">
+    <span style="padding:0 32px;">✦ Бесплатная доставка от 30 000 ₽</span>
+    <span style="padding:0 32px;">✦ Гарантия 5 лет</span>
+    <span style="padding:0 32px;">✦ Рассрочка 0% на 6 месяцев</span>
+    <span style="padding:0 32px;">✦ Более 5000 довольных клиентов</span>
+    <span style="padding:0 32px;">✦ Бесплатная доставка от 30 000 ₽</span>
+    <span style="padding:0 32px;">✦ Гарантия 5 лет</span>
+    <span style="padding:0 32px;">✦ Рассрочка 0% на 6 месяцев</span>
+    <span style="padding:0 32px;">✦ Более 5000 довольных клиентов</span>
+  </div>
+</div>
+
+<!-- Header -->
+<header id="mainHeader" style="position:sticky; top:0; z-index:50; backdrop-filter:blur(20px); background:rgba(7,24,66,0.6); border-bottom:1px solid rgba(255,255,255,0.1); transition:all .3s;">
+  <div style="max-width:1280px; margin:0 auto; padding:0 24px;">
+    <div style="display:flex; align-items:center; justify-content:space-between; height:96px; gap:32px;">
+
+      <!-- Логотип -->
+      <a href="{{ url_for('index') }}" style="text-decoration:none; flex-shrink:0;">
+        <div class="font-serif" style="font-size:24px; letter-spacing:0.25em; color:#fff;">NIKA</div>
+        <div style="font-size:9px; letter-spacing:0.4em; color:#93c5fd; text-align:center;">САНТЕХНИКА</div>
+      </a>
+
+      <!-- Меню -->
+      <nav style="display:flex; align-items:center; gap:28px; font-size:12px; letter-spacing:0.2em; text-transform:uppercase;" class="menu-desktop">
+        <a href="{{ url_for('catalog') }}" class="hover-underline" style="color:#93c5fd; text-decoration:none;">Каталог</a>
+        <a href="{{ url_for('collections') }}" class="hover-underline" style="color:#93c5fd; text-decoration:none;">Коллекции</a>
+        <a href="{{ url_for('partners') }}" class="hover-underline" style="color:#93c5fd; text-decoration:none;">Партнёрам</a>
+        <a href="{{ url_for('where_to_buy') }}" class="hover-underline" style="color:#93c5fd; text-decoration:none;">Где купить</a>
+        <a href="{{ url_for('contacts') }}" class="hover-underline" style="color:#93c5fd; text-decoration:none;">Контакты</a>
+      </nav>
+
+      <!-- Иконки -->
+      <div style="display:flex; align-items:center; gap:8px;">
+
+        <a href="{{ url_for('catalog') }}" title="Поиск"
+           style="width:48px; height:48px; display:flex; align-items:center; justify-content:center; color:#93c5fd; text-decoration:none; border-radius:50%; transition:all .3s;">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="width:28px; height:28px;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+          </svg>
+        </a>
+
+        {% if current_user %}
+        <a href="{{ url_for('account') }}" title="Кабинет"
+           style="width:48px; height:48px; display:flex; align-items:center; justify-content:center; color:#93c5fd; text-decoration:none; border-radius:50%; transition:all .3s;">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="width:28px; height:28px;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+          </svg>
+        </a>
+        {% else %}
+        <a href="{{ url_for('login') }}"
+           style="height:48px; padding:0 20px; display:flex; align-items:center; font-size:11px; letter-spacing:0.25em; text-transform:uppercase; color:#93c5fd; text-decoration:none; border:1px solid rgba(255,255,255,0.2); border-radius:999px; transition:all .3s;">
+          Войти
+        </a>
+        {% endif %}
+
+        <a href="{{ url_for('cart') }}" title="Корзина"
+           style="position:relative; width:48px; height:48px; display:flex; align-items:center; justify-content:center; color:#93c5fd; text-decoration:none; border-radius:50%; transition:all .3s;">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="width:28px; height:28px;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
+          </svg>
+          {% if cart_count > 0 %}
+          <span id="cart-badge"
+                style="position:absolute; top:2px; right:2px; background:#fff; color:#071842; font-size:10px; border-radius:999px; min-width:20px; height:20px; padding:0 4px; display:flex; align-items:center; justify-content:center; font-weight:700;">
+            {{ cart_count }}
+          </span>
+          {% endif %}
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Flash -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<div style="max-width:1280px; margin:0 auto; padding:24px 24px 0; position:relative; z-index:10;">
+  {% for cat, msg in messages %}
+  <div class="glass" style="padding:14px 20px; font-size:14px; margin-bottom:8px; border-left:2px solid
+      {% if cat=='success' %}#fff
+      {% elif cat=='error' %}#ef4444
+      {% elif cat=='warning' %}#f59e0b
+      {% else %}#93c5fd{% endif %};">
+    {{ msg }}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+
+<main style="flex:1; position:relative; z-index:10;">
+  {% block content %}{% endblock %}
+</main>
+
+<!-- Footer -->
+<footer style="border-top:1px solid rgba(255,255,255,0.1); margin-top:96px; position:relative; z-index:10; background:rgba(7,24,66,0.4); backdrop-filter:blur(10px);">
+  <div style="max-width:1280px; margin:0 auto; padding:64px 24px; display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:40px; font-size:14px;">
+    <div>
+      <div class="font-serif" style="font-size:24px; letter-spacing:0.25em; color:#fff; margin-bottom:4px;">NIKA</div>
+      <div style="font-size:9px; letter-spacing:0.4em; color:#93c5fd; margin-bottom:24px;">САНТЕХНИКА</div>
+      <p style="color:rgba(147,197,253,0.7); line-height:1.6; font-size:13px;">Премиальная сантехника с 2003 года. Комплексные решения для ванной комнаты.</p>
+    </div>
+    <div>
+      <div style="font-size:10px; letter-spacing:0.3em; color:#93c5fd; text-transform:uppercase; margin-bottom:20px;">Каталог</div>
+      <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:12px;">
+        <li><a href="{{ url_for('catalog', category='Смесители') }}" class="hover-underline" style="color:rgba(147,197,253,0.8); text-decoration:none; font-size:13px;">Смесители</a></li>
+        <li><a href="{{ url_for('catalog', category='Душевые системы') }}" class="hover-underline" style="color:rgba(147,197,253,0.8); text-decoration:none; font-size:13px;">Душевые системы</a></li>
+        <li><a href="{{ url_for('catalog', category='Ванны') }}" class="hover-underline" style="color:rgba(147,197,253,0.8); text-decoration:none; font-size:13px;">Ванны</a></li>
+        <li><a href="{{ url_for('catalog', category='Унитазы') }}" class="hover-underline" style="color:rgba(147,197,253,0.8); text-decoration:none; font-size:13px;">Унитазы</a></li>
+      </ul>
+    </div>
+    <div>
+      <div style="font-size:10px; letter-spacing:0.3em; color:#93c5fd; text-transform:uppercase; margin-bottom:20px;">Компания</div>
+      <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:12px;">
+        <li><a href="{{ url_for('collections') }}" class="hover-underline" style="color:rgba(147,197,253,0.8); text-decoration:none; font-size:13px;">Коллекции</a></li>
+        <li><a href="{{ url_for('partners') }}" class="hover-underline" style="color:rgba(147,197,253,0.8); text-decoration:none; font-size:13px;">Партнёрам</a></li>
+        <li><a href="{{ url_for('where_to_buy') }}" class="hover-underline" style="color:rgba(147,197,253,0.8); text-decoration:none; font-size:13px;">Где купить</a></li>
+        <li><a href="{{ url_for('contacts') }}" class="hover-underline" style="color:rgba(147,197,253,0.8); text-decoration:none; font-size:13px;">Контакты</a></li>
+      </ul>
+    </div>
+    <div>
+      <div style="font-size:10px; letter-spacing:0.3em; color:#93c5fd; text-transform:uppercase; margin-bottom:20px;">Связь</div>
+      <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:12px; color:rgba(147,197,253,0.8); font-size:13px;">
+        <li style="color:#fff; font-size:18px; font-weight:300;">8 (800) 555-35-35</li>
+        <li>info@nika-san.ru</li>
+        <li>Москва, ул. Дизайнерская, 12</li>
+      </ul>
+    </div>
+  </div>
+  <div class="gradient-line"></div>
+  <div style="padding:24px 0; text-align:center; font-size:10px; color:rgba(147,197,253,0.6); letter-spacing:0.3em;">
+    © 2026 NIKA САНТЕХНИКА · ВСЕ ПРАВА ЗАЩИЩЕНЫ
+  </div>
+</footer>
+
+<!-- Кнопка вверх -->
+<button onclick="window.scrollTo({top:0,behavior:'smooth'})"
+        id="scrollTop"
+        style="position:fixed; bottom:24px; right:24px; width:48px; height:48px; background:#fff; color:#071842; border:none; border-radius:50%; box-shadow:0 20px 40px -10px rgba(59,130,246,0.5); display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:all .3s; cursor:pointer; z-index:40; font-size:20px;">
+  ↑
+</button>
+
+<script>
+window.addEventListener('load', () => {
+  setTimeout(() => document.getElementById('pageLoader').classList.add('hidden'), 400);
+});
+
+window.addEventListener('scroll', () => {
+  const header = document.getElementById('mainHeader');
+  const btn = document.getElementById('scrollTop');
+  if (window.scrollY > 50) {
+    header.style.boxShadow = '0 20px 40px -20px rgba(0,0,0,0.5)';
+  } else {
+    header.style.boxShadow = 'none';
+  }
+  if (window.scrollY > 400) {
+    btn.style.opacity = '1';
+    btn.style.pointerEvents = 'auto';
+  } else {
+    btn.style.opacity = '0';
+    btn.style.pointerEvents = 'none';
+  }
+});
+
+document.addEventListener('mousemove', (e) => {
+  const sp = document.getElementById('spotlight');
+  if (sp) { sp.style.left = e.clientX + 'px'; sp.style.top = e.clientY + 'px'; }
+});
+
+async function addToCart(pid, qty = 1) {
+  const fd = new FormData();
+  fd.append('qty', qty);
+  const r = await fetch(`/cart/add/${pid}`, {
+    method: 'POST',
+    headers: {'X-Requested-With': 'XMLHttpRequest'},
+    body: fd
+  });
+  const data = await r.json();
+  if (data.ok) {
+    let badge = document.getElementById('cart-badge');
+    const cartLink = document.querySelector('a[href$="/cart"]');
+    if (!badge) {
+      badge = document.createElement('span');
+      badge.id = 'cart-badge';
+      badge.style.cssText = 'position:absolute; top:2px; right:2px; background:#fff; color:#071842; font-size:10px; border-radius:999px; min-width:20px; height:20px; padding:0 4px; display:flex; align-items:center; justify-content:center; font-weight:700;';
+      cartLink.appendChild(badge);
+    }
+    badge.textContent = data.count;
+    badge.animate([{transform:'scale(1.6)'},{transform:'scale(1)'}], {duration:350, easing:'ease-out'});
+  }
+}
+
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('active'); revealObserver.unobserve(e.target); }
+  });
+}, { threshold: 0.1 });
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+  renderViewed();
+});
+
+function trackProduct(pid, name, price, icon) {
+  let viewed = JSON.parse(localStorage.getItem('viewed') || '[]');
+  viewed = viewed.filter(x => x.id !== pid);
+  viewed.unshift({id: pid, name: name, price: price, icon: icon});
+  viewed = viewed.slice(0, 8);
+  localStorage.setItem('viewed', JSON.stringify(viewed));
+}
+
+function renderViewed() {
+  const container = document.getElementById('viewed-block');
+  if (!container) return;
+  const viewed = JSON.parse(localStorage.getItem('viewed') || '[]');
+  if (viewed.length === 0) { container.closest('section').style.display = 'none'; return; }
+  container.innerHTML = viewed.map(v => `
+    <a href="/product/${v.id}" class="block group reveal active" style="text-decoration:none;">
+      <div class="aspect-square glass flex items-center justify-center text-5xl mb-3 img-zoom" style="aspect-ratio:1;">
+        <div>${v.icon}</div>
+      </div>
+      <div style="font-size:12px; color:rgba(147,197,253,0.8); line-height:1.4;">${v.name}</div>
+      <div style="color:#fff; font-size:14px; font-weight:500; margin-top:4px;">${Number(v.price).toLocaleString('ru-RU')} ₽</div>
+    </a>
+  `).join('');
+}
+</script>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>

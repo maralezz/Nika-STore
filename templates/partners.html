@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}Партнёрам — NIKA Сантехника{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-6 py-12">
+
+  <div class="text-center mb-20">
+    <div class="text-[10px] tracking-[0.5em] text-blue-200 uppercase mb-4">Сотрудничество</div>
+    <h1 class="font-serif text-5xl md:text-6xl text-white mb-6">Партнёрам</h1>
+    <div class="gradient-line w-32 mx-auto"></div>
+    <p class="text-blue-100/70 max-w-2xl mx-auto mt-8 leading-relaxed">
+      Мы открыты для сотрудничества с дизайнерами, строительными компаниями и оптовыми покупателями.
+    </p>
+  </div>
+
+  <!-- Преимущества -->
+  <div class="grid md:grid-cols-3 gap-6 mb-20">
+    {% for icon, title, text in [
+      ('◈','Гибкие условия','Индивидуальные скидки от 15% до 40% в зависимости от объёма закупок.'),
+      ('◷','Отсрочка платежа','Для постоянных партнёров — отсрочка до 30 дней без процентов.'),
+      ('✦','Персональный менеджер','Выделенный специалист ведёт ваш проект от заявки до поставки.'),
+      ('◉','Обучение','Проводим мастер-классы и вебинары по продукции для ваших сотрудников.'),
+      ('◇','Маркетинговая поддержка','Предоставляем фото, 3D-модели и POS-материалы для продвижения.'),
+      ('△','Логистика','Собственный склад в Москве. Отгрузка в течение 24 часов.')
+    ] %}
+    <div class="glass rounded-2xl p-8 reveal">
+      <div class="text-3xl text-white mb-4">{{ icon }}</div>
+      <div class="font-serif text-xl text-white mb-3">{{ title }}</div>
+      <p class="text-blue-100/70 text-sm leading-relaxed">{{ text }}</p>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Форма заявки -->
+  <div class="max-w-2xl mx-auto glass rounded-3xl p-10 reveal">
+    <div class="text-center mb-8">
+      <div class="text-[10px] tracking-[0.5em] text-blue-200 uppercase mb-3">Оставьте заявку</div>
+      <h2 class="font-serif text-3xl text-white">Стать партнёром</h2>
+    </div>
+
+    <form method="post" action="{{ url_for('partners') }}" class="space-y-5">
+      <input name="company" placeholder="Название компании *" required
+             class="w-full px-4 py-4 bg-ink-900/50 border border-white/10 text-white placeholder-blue-200/40 focus:border-white outline-none transition rounded-xl">
+      <input name="name" placeholder="Ваше имя *" required
+             class="w-full px-4 py-4 bg-ink-900/50 border border-white/10 text-white placeholder-blue-200/40 focus:border-white outline-none transition rounded-xl">
+      <input name="phone" placeholder="Телефон *" required
+             class="w-full px-4 py-4 bg-ink-900/50 border border-white/10 text-white placeholder-blue-200/40 focus:border-white outline-none transition rounded-xl">
+      <input name="email" type="email" placeholder="Email *" required
+             class="w-full px-4 py-4 bg-ink-900/50 border border-white/10 text-white placeholder-blue-200/40 focus:border-white outline-none transition rounded-xl">
+      <textarea name="message" rows="4" placeholder="Комментарий"
+                class="w-full px-4 py-4 bg-ink-900/50 border border-white/10 text-white placeholder-blue-200/40 focus:border-white outline-none transition resize-none rounded-xl"></textarea>
+      <button type="button"
+              onclick="this.innerHTML='<span>✓ Заявка отправлена</span>'; setTimeout(()=>this.innerHTML='<span>Отправить заявку</span>', 2500);"
+              class="btn-primary w-full py-4 text-xs tracking-[0.3em] uppercase font-semibold rounded-xl">
+        <span>Отправить заявку</span>
+      </button>
+    </form>
+  </div>
+
+</div>
+{% endblock %}

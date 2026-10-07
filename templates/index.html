@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<section class="relative h-[90vh] min-h-[600px] overflow-hidden">
+  <div class="relative h-full max-w-7xl mx-auto px-6 flex flex-col justify-center z-10">
+    <div class="max-w-2xl">
+      <div class="text-[10px] tracking-[0.5em] text-blue-200 uppercase mb-6 animate-fade-in" style="animation-delay:.2s;">Коллекция 2026</div>
+      <h1 class="font-serif text-5xl md:text-7xl lg:text-8xl leading-[1.05] mb-8 text-white animate-fade-up" style="animation-delay:.3s;">
+        Искусство<br>воды в деталях
+      </h1>
+      <p class="text-blue-100/80 text-lg leading-relaxed mb-10 max-w-lg animate-fade-up" style="animation-delay:.5s;">
+        Премиальная сантехника для тех, кто ценит совершенство в каждой детали. Гарантия 5 лет.
+      </p>
+      <div class="flex gap-4 flex-wrap animate-fade-up" style="animation-delay:.7s;">
+        <a href="{{ url_for('catalog') }}" class="btn-primary px-10 py-4 font-medium tracking-[0.2em] uppercase text-xs">
+          <span>Смотреть каталог</span>
+        </a>
+        <a href="{{ url_for('collections') }}" class="btn-ghost px-10 py-4 text-white font-medium tracking-[0.2em] uppercase text-xs">
+          <span>Коллекции</span>
+        </a>
+      </div>
+    </div>
+  </div>
+  <div class="absolute bottom-8 left-1/2 -translate-x-1/2 text-[10px] tracking-[0.3em] text-blue-200/60 uppercase animate-pulse">
+    ↓ Пролистайте
+  </div>
+</section>
+
+<section class="border-y border-white/10">
+  <div class="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 divide-x divide-white/10">
+    {% for title, sub in [('Доставка','по всей России'), ('Гарантия','5 лет'), ('Оплата','частями'), ('Возврат','30 дней')] %}
+    <div class="py-8 text-center px-4 reveal">
+      <div class="font-serif text-2xl text-white mb-1">{{ title }}</div>
+      <div class="text-[10px] tracking-[0.3em] text-blue-200/70 uppercase">{{ sub }}</div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section id="collections" class="max-w-7xl mx-auto px-6 py-24">
+  <div class="text-center mb-16 reveal">
+    <div class="text-[10px] tracking-[0.5em] text-blue-200 uppercase mb-4">Категории</div>
+    <h2 class="font-serif text-4xl md:text-5xl text-white">Выберите своё</h2>
+    <div class="gradient-line w-24 mx-auto mt-6"></div>
+  </div>
+
+  <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+    {% set cat_icons = {'Смесители':'🚰','Душевые системы':'🌧️','Унитазы':'🚽','Раковины':'🪣','Ванны':'🛁','Полотенцесушители':'🔥'} %}
+    {% for c in categories %}
+    <a href="{{ url_for('catalog', category=c) }}"
+       class="img-zoom group relative aspect-square glass hover:border-white/30 transition overflow-hidden reveal">
+      <div class="absolute inset-0 flex items-center justify-center text-7xl opacity-70 group-hover:opacity-100 transition duration-500">
+        {{ cat_icons.get(c, '🔧') }}
+      </div>
+      <div class="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-ink-900/90 to-transparent">
+        <div class="font-serif text-xl text-white">{{ c }}</div>
+        <div class="text-[9px] tracking-[0.3em] text-blue-200 uppercase mt-1 group-hover:text-white transition">Смотреть →</div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="max-w-7xl mx-auto px-6 py-16">
+  <div class="flex items-end justify-between mb-12 reveal">
+    <div>
+      <div class="text-[10px] tracking-[0.5em] text-blue-200 uppercase mb-4">Бестселлеры</div>
+      <h2 class="font-serif text-4xl md:text-5xl text-white">Хиты продаж</h2>
+    </div>
+    <a href="{{ url_for('catalog') }}" class="text-[10px] tracking-[0.3em] text-blue-200 uppercase hover:text-white transition hidden md:block hover-underline">
+      Все товары →
+    </a>
+  </div>
+  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12">
+    {% for p in hits %}
+      {% include '_product_card.html' %}
+    {% endfor %}
+  </div>
+</section>
+
+<section class="max-w-7xl mx-auto px-6 py-16" style="display:none;">
+  <div class="mb-8 reveal">
+    <div class="text-[10px] tracking-[0.5em] text-blue-200 uppercase mb-4">Вы смотрели</div>
+    <h2 class="font-serif text-3xl text-white">Недавно просмотренные</h2>
+  </div>
+  <div id="viewed-block" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-6 gap-y-8"></div>
+</section>
+
+{% if new %}
+<section class="max-w-7xl mx-auto px-6 py-16">
+  <div class="flex items-end justify-between mb-12 reveal">
+    <div>
+      <div class="text-[10px] tracking-[0.5em] text-blue-200 uppercase mb-4">Только что</div>
+      <h2 class="font-serif text-4xl md:text-5xl text-white">Новинки</h2>
+    </div>
+  </div>
+  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12">
+    {% for p in new %}
+      {% include '_product_card.html' %}
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="border-t border-white/10 mt-24 relative overflow-hidden">
+  <div class="max-w-5xl mx-auto px-6 py-24 text-center relative z-10">
+    <div class="text-[10px] tracking-[0.5em] text-blue-200 uppercase mb-6 reveal">С 2003 года</div>
+    <h2 class="font-serif text-4xl md:text-5xl text-white mb-8 leading-tight reveal">
+      Мы создаём не просто сантехнику —<br>мы создаём атмосферу
+    </h2>
+    <p class="text-blue-100/70 leading-relaxed max-w-2xl mx-auto text-[15px] reveal">
+      Каждое изделие NIKA проходит строгий контроль качества и создаётся с любовью к деталям.
+      Мы работаем только с проверенными материалами и даём гарантию 5 лет на всю продукцию.
+    </p>
+    <div class="mt-10 reveal">
+      <a href="{{ url_for('catalog') }}" class="btn-primary inline-block px-10 py-4 font-medium tracking-[0.2em] uppercase text-xs">
+        <span>Перейти в каталог</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

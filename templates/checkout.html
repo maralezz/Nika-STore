@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}Оформление заказа — NIKA{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto px-6 py-12">
+  <div class="mb-10">
+    <div class="text-[10px] tracking-[0.5em] text-blue-200 uppercase mb-4">Шаг 2 из 2</div>
+    <h1 class="font-serif text-4xl md:text-5xl text-white">Оформление</h1>
+    <div class="gradient-line w-24 mt-6"></div>
+  </div>
+
+  <div class="glass rounded-2xl p-6 mb-6 reveal">
+    <div class="text-[10px] tracking-[0.3em] text-blue-200 uppercase mb-4">Состав заказа</div>
+    {% for it in items %}
+    <div class="flex justify-between text-sm py-2 border-b border-white/5 last:border-0">
+      <span class="text-blue-100">{{ it.product['name'] }} <span class="text-blue-200/60">× {{ it.quantity }}</span></span>
+      <span class="text-white font-medium">{{ '{:,.0f}'.format(it.subtotal).replace(',',' ') }} ₽</span>
+    </div>
+    {% endfor %}
+    <div class="flex justify-between pt-4 mt-2 border-t border-white/10">
+      <span class="text-[11px] tracking-[0.3em] text-blue-200 uppercase">Итого</span>
+      <span class="font-serif text-2xl text-white">{{ '{:,.0f}'.format(total).replace(',',' ') }} ₽</span>
+    </div>
+  </div>
+
+  <form method="post" class="glass rounded-2xl p-8 space-y-6 reveal">
+    <div>
+      <label class="block text-[10px] tracking-[0.3em] text-blue-200 uppercase mb-3">Адрес доставки *</label>
+      <input name="address" required value="{{ current_user['address'] }}"
+             class="w-full px-4 py-4 bg-ink-900/50 border border-white/10 text-white focus:border-white outline-none transition rounded-xl">
+    </div>
+    <div>
+      <label class="block text-[10px] tracking-[0.3em] text-blue-200 uppercase mb-3">Телефон *</label>
+      <input name="phone" required value="{{ current_user['phone'] }}" placeholder="+7 (___) ___-__-__"
+             class="w-full px-4 py-4 bg-ink-900/50 border border-white/10 text-white placeholder-blue-200/40 focus:border-white outline-none transition rounded-xl">
+    </div>
+    <div>
+      <label class="block text-[10px] tracking-[0.3em] text-blue-200 uppercase mb-3">Комментарий</label>
+      <textarea name="comment" rows="3" placeholder="Пожелания к заказу..."
+                class="w-full px-4 py-4 bg-ink-900/50 border border-white/10 text-white placeholder-blue-200/40 focus:border-white outline-none transition resize-none rounded-xl"></textarea>
+    </div>
+    <button class="btn-primary w-full py-5 text-xs tracking-[0.3em] uppercase font-semibold rounded-2xl">
+      <span>Подтвердить заказ</span>
+    </button>
+  </form>
+</div>
+{% endblock %}

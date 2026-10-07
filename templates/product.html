@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% block title %}{{ p['name'] }} — NIKA Сантехника{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-6 py-12">
+
+  <nav class="text-[11px] tracking-[0.2em] text-blue-200/70 uppercase mb-10">
+    <a href="{{ url_for('index') }}" class="hover:text-white transition">Главная</a>
+    <span class="mx-2 opacity-40">/</span>
+    <a href="{{ url_for('catalog', category=p['category']) }}" class="hover:text-white transition">{{ p['category'] }}</a>
+    <span class="mx-2 opacity-40">/</span>
+    <span class="text-white">{{ p['name'] }}</span>
+  </nav>
+
+  <div class="grid md:grid-cols-2 gap-12">
+    <div class="reveal">
+      <div class="aspect-square glass rounded-3xl flex items-center justify-center text-[12rem] relative overflow-hidden group">
+        <div class="opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700">
+          {{ p['icon'] }}
+        </div>
+        {% if p['is_new'] %}
+        <span class="absolute top-6 left-6 text-[10px] tracking-[0.3em] text-white border border-white/30 px-3 py-1.5 bg-ink-800/70 backdrop-blur rounded-full">NEW</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="reveal">
+      <div class="text-[10px] tracking-[0.4em] text-blue-200 uppercase mb-3">{{ p['brand'] }}</div>
+      <h1 class="font-serif text-3xl md:text-4xl text-white leading-tight mb-6">{{ p['name'] }}</h1>
+
+      <div class="flex items-baseline gap-4 mb-8">
+        <span class="text-4xl font-light text-white">{{ '{:,.0f}'.format(p['price']).replace(',',' ') }} ₽</span>
+        {% if p['old_price'] %}
+          <span class="text-lg text-blue-200/60 line-through">{{ '{:,.0f}'.format(p['old_price']).replace(',',' ') }} ₽</span>
+          <span class="bg-white text-ink-800 text-[10px] tracking-[0.2em] font-semibold px-2 py-1 uppercase rounded">−{{ ((1 - p['price']/p['old_price'])*100)|round|int }}%</span>
+        {% endif %}
+      </div>
+
+      <div class="gradient-line mb-8"></div>
+
+      <p class="text-blue-100/80 mb-8 leading-relaxed">{{ p['description'] }}</p>
+
+      <div class="grid grid-cols-2 gap-4 mb-8 text-sm">
+        <div class="glass rounded-xl p-4">
+          <div class="text-[10px] tracking-[0.3em] text-blue-200 uppercase mb-1">Материал</div>
+          <div class="text-white">{{ p['material'] or '—' }}</div>
+        </div>
+        <div class="glass rounded-xl p-4">
+          <div class="text-[10px] tracking-[0.3em] text-blue-200 uppercase mb-1">Подключение</div>
+          <div class="text-white">{{ p['diameter'] or '—' }}</div>
+        </div>
+      </div>
+
+      <div class="flex gap-3 mb-8">
+        <button onclick="addToCart({{ p['id'] }}); this.querySelector('span').textContent='✓ Добавлено в корзину'; setTimeout(()=>this.querySelector('span').textContent='В корзину', 2000);"
+                class="btn-primary flex-1 py-5 text-xs tracking-[0.3em] uppercase font-semibold rounded-2xl">
+          <span>В корзину</span>
+        </button>
+        <button onclick="toggleFav({{ p['id'] }}, this)" data-fav="{{ '1' if in_fav else '0' }}"
+                class="px-6 py-5 glass rounded-2xl hover:border-white/40 text-2xl transition">
+          {{ '❤️' if in_fav else '🤍' }}
+        </button>
+      </div>
+
+      <div class="space-y-3 text-[12px] text-blue-100/70">
+        <div class="flex items-center gap-3"><span class="text-white">✓</span> Бесплатная доставка от 30 000 ₽</div>
+        <div class="flex items-center gap-3"><span class="text-white">✓</span> Гарантия 5 лет от производителя</div>
+        <div class="flex items-center gap-3"><span class="text-white">✓</span> Возврат в течение 30 дней</div>
+      </div>
+    </div>
+  </div>
+
+  {% if similar %}
+  <section class="mt-24">
+    <div class="mb-10 reveal">
+      <div class="text-[10px] tracking-[0.5em] text-blue-200 uppercase mb-4">Возможно понравится</div>
+      <h2 class="font-serif text-3xl text-white">Похожие товары</h2>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-10">
+      {% for p in similar %}{% include '_product_card.html' %}{% endfor %}
+    </div>
+  </section>
+  {% endif %}
+</div>
+
+<script>
+async function toggleFav(pid, btn) {
+  {% if not current_user %}
+    location.href = "{{ url_for('login') }}"; return;
+  {% endif %}
+  const r = await fetch(`/favorites/toggle/${pid}`, {method:'POST'});
+  const d = await r.json();
+  btn.textContent = d.in_fav ? '❤️' : '🤍';
+}
+
+trackProduct(
+  {{ p['id'] }},
+  {{ p['name'] | tojson }},
+  {{ p['price'] }},
+  {{ p['icon'] | tojson }}
+);
+</script>
+{% endblock %}

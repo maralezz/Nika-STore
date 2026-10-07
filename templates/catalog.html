@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-6 py-12">
+  <div class="mb-10">
+    <div class="text-[10px] tracking-[0.5em] text-blue-200 uppercase mb-4">Каталог</div>
+    <h1 class="font-serif text-4xl md:text-5xl text-white">
+      {% if category %}{{ category }}{% elif q %}Поиск: «{{ q }}»{% else %}Все товары{% endif %}
+    </h1>
+    <div class="gradient-line w-24 mt-6"></div>
+  </div>
+
+  <div class="grid lg:grid-cols-4 gap-8">
+
+    <aside class="lg:col-span-1">
+      <form method="get" class="glass p-6 space-y-6 sticky top-32 rounded-2xl">
+        {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+
+        <div class="text-[10px] tracking-[0.4em] text-blue-200 uppercase">Фильтры</div>
+
+        <div>
+          <div class="text-[11px] tracking-[0.2em] text-white uppercase mb-3">Категория</div>
+          <select name="category" class="w-full px-3 py-2 bg-ink-900/50 border border-white/10 text-white text-sm focus:border-white outline-none transition rounded-lg">
+            <option value="">Все категории</option>
+            {% for c in categories %}
+            <option value="{{ c }}" {{ 'selected' if category==c }}>{{ c }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <div class="text-[11px] tracking-[0.2em] text-white uppercase mb-3">Бренд</div>
+          <select name="brand" class="w-full px-3 py-2 bg-ink-900/50 border border-white/10 text-white text-sm focus:border-white outline-none transition rounded-lg">
+            <option value="">Все бренды</option>
+            {% for b in brands_list %}
+            <option value="{{ b }}" {{ 'selected' if brand==b }}>{{ b }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <div class="text-[11px] tracking-[0.2em] text-white uppercase mb-3">Материал</div>
+          <select name="material" class="w-full px-3 py-2 bg-ink-900/50 border border-white/10 text-white text-sm focus:border-white outline-none transition rounded-lg">
+            <option value="">Любой</option>
+            {% for m in materials %}
+            <option value="{{ m }}" {{ 'selected' if material==m }}>{{ m }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <div class="text-[11px] tracking-[0.2em] text-white uppercase mb-3">Цена, ₽</div>
+          <div class="flex gap-2">
+            <input type="number" name="price_min" value="{{ price_min or '' }}" placeholder="от"
+                   class="w-1/2 px-2 py-2 bg-ink-900/50 border border-white/10 text-white text-sm focus:border-white outline-none transition rounded-lg">
+            <input type="number" name="price_max" value="{{ price_max or '' }}" placeholder="до"
+                   class="w-1/2 px-2 py-2 bg-ink-900/50 border border-white/10 text-white text-sm focus:border-white outline-none transition rounded-lg">
+          </div>
+        </div>
+
+        <div>
+          <div class="text-[11px] tracking-[0.2em] text-white uppercase mb-3">Сортировка</div>
+          <select name="sort" class="w-full px-3 py-2 bg-ink-900/50 border border-white/10 text-white text-sm focus:border-white outline-none transition rounded-lg">
+            <option value="popular" {{ 'selected' if sort=='popular' }}>Популярные</option>
+            <option value="price_asc" {{ 'selected' if sort=='price_asc' }}>Цена ↑</option>
+            <option value="price_desc" {{ 'selected' if sort=='price_desc' }}>Цена ↓</option>
+            <option value="new" {{ 'selected' if sort=='new' }}>Новинки</option>
+          </select>
+        </div>
+
+        <div class="flex gap-2 pt-2">
+          <button class="flex-1 py-3 bg-white text-ink-800 text-[10px] tracking-[0.3em] uppercase font-semibold hover:bg-blue-300 hover:text-white transition rounded-lg">Применить</button>
+          <a href="{{ url_for('catalog') }}" class="px-4 py-3 border border-white/20 hover:border-white rounded-lg text-sm transition">✕</a>
+        </div>
+      </form>
+    </aside>
+
+    <div class="lg:col-span-3">
+      <div class="mb-6 text-[11px] tracking-[0.2em] text-blue-200/70 uppercase">
+        Найдено: <span class="text-white">{{ products|length }}</span>
+      </div>
+
+      {% if products %}
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-12">
+        {% for p in products %}
+          {% include '_product_card.html' %}
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="glass rounded-2xl p-16 text-center">
+        <div class="text-5xl mb-4 opacity-30">∅</div>
+        <div class="font-serif text-2xl mb-2 text-white">Ничего не нашлось</div>
+        <div class="text-sm text-blue-100/60 mb-6">Попробуйте изменить фильтры</div>
+        <a href="{{ url_for('catalog') }}" class="btn-primary inline-block px-8 py-3 text-[10px] tracking-[0.3em] uppercase">
+          <span>Сбросить фильтры</span>
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

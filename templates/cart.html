@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}Корзина — NIKA{% endblock %}
+{% block content %}
+<div class="max-w-5xl mx-auto px-6 py-12">
+  <div class="mb-10">
+    <div class="text-[10px] tracking-[0.5em] text-blue-200 uppercase mb-4">Ваш заказ</div>
+    <h1 class="font-serif text-4xl md:text-5xl text-white">Корзина</h1>
+    <div class="gradient-line w-24 mt-6"></div>
+  </div>
+
+  {% if items %}
+  <div class="space-y-3 mb-10">
+    {% for it in items %}
+    <div class="glass rounded-2xl p-5 flex items-center gap-5 reveal">
+      <a href="{{ url_for('product', pid=it.product['id']) }}"
+         class="w-24 h-24 bg-ink-900/50 rounded-xl flex items-center justify-center text-5xl shrink-0 hover:scale-105 transition">
+        {{ it.product['icon'] }}
+      </a>
+      <div class="flex-1 min-w-0">
+        <div class="text-[10px] tracking-[0.3em] text-blue-200 uppercase mb-1">{{ it.product['brand'] }}</div>
+        <a href="{{ url_for('product', pid=it.product['id']) }}" class="font-serif text-lg text-white hover:text-blue-200 transition line-clamp-1">{{ it.product['name'] }}</a>
+        <div class="text-white mt-2">{{ '{:,.0f}'.format(it.product['price']).replace(',',' ') }} ₽</div>
+      </div>
+      <form method="post" action="{{ url_for('cart_update') }}" class="flex items-center gap-2">
+        <input type="hidden" name="pid" value="{{ it.product['id'] }}">
+        <button name="qty" value="{{ it.quantity - 1 }}" class="w-9 h-9 border border-white/20 hover:border-white hover:bg-white hover:text-ink-800 transition rounded-lg">−</button>
+        <span class="w-10 text-center font-medium">{{ it.quantity }}</span>
+        <button name="qty" value="{{ it.quantity + 1 }}" class="w-9 h-9 border border-white/20 hover:border-white hover:bg-white hover:text-ink-800 transition rounded-lg">+</button>
+      </form>
+      <div class="w-28 text-right hidden sm:block">
+        <div class="text-white font-medium">{{ '{:,.0f}'.format(it.subtotal).replace(',',' ') }} ₽</div>
+      </div>
+      <form method="post" action="{{ url_for('cart_remove', pid=it.product['id']) }}">
+        <button class="text-blue-200/60 hover:text-white transition text-xl" title="Удалить">✕</button>
+      </form>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="glass rounded-2xl p-8 flex items-center justify-between flex-wrap gap-6 reveal">
+    <div>
+      <div class="text-[10px] tracking-[0.3em] text-blue-200 uppercase mb-2">Итого</div>
+      <div class="font-serif text-4xl text-white">{{ '{:,.0f}'.format(total).replace(',',' ') }} ₽</div>
+    </div>
+    <a href="{{ url_for('checkout') }}" class="btn-primary px-10 py-5 text-xs tracking-[0.3em] uppercase font-semibold rounded-2xl">
+      <span>Оформить заказ →</span>
+    </a>
+  </div>
+
+  {% else %}
+  <div class="glass rounded-2xl p-20 text-center reveal">
+    <div class="text-6xl mb-6 opacity-30">∅</div>
+    <div class="font-serif text-2xl mb-3 text-white">Корзина пуста</div>
+    <p class="text-blue-100/60 mb-8">Самое время выбрать что-нибудь классное</p>
+    <a href="{{ url_for('catalog') }}" class="btn-primary inline-block px-10 py-4 text-[10px] tracking-[0.3em] uppercase rounded-2xl">
+      <span>В каталог</span>
+    </a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

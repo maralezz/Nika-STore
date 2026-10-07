@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}Где купить — NIKA Сантехника{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-6 py-12">
+
+  <div class="text-center mb-20">
+    <div class="text-[10px] tracking-[0.5em] text-blue-200 uppercase mb-4">Наши точки</div>
+    <h1 class="font-serif text-5xl md:text-6xl text-white mb-6">Где купить</h1>
+    <div class="gradient-line w-32 mx-auto"></div>
+    <p class="text-blue-100/70 max-w-2xl mx-auto mt-8 leading-relaxed">
+      Шоурумы NIKA в крупнейших городах России. Приезжайте посмотреть продукцию вживую.
+    </p>
+  </div>
+
+  <!-- Города -->
+  <div class="grid md:grid-cols-3 gap-6 mb-16">
+    {% for city, addr, phone, hours in [
+      ('Москва', 'ул. Дизайнерская, 12', '+7 (495) 555-35-35', 'Пн–Вс: 10:00 – 21:00'),
+      ('Санкт-Петербург', 'Невский пр., 88', '+7 (812) 555-35-35', 'Пн–Вс: 10:00 – 21:00'),
+      ('Казань', 'ул. Баумана, 42', '+7 (843) 555-35-35', 'Пн–Сб: 10:00 – 20:00'),
+      ('Екатеринбург', 'пр. Ленина, 25', '+7 (343) 555-35-35', 'Пн–Сб: 10:00 – 20:00'),
+      ('Новосибирск', 'Красный пр., 100', '+7 (383) 555-35-35', 'Пн–Сб: 10:00 – 20:00'),
+      ('Краснодар', 'ул. Красная, 176', '+7 (861) 555-35-35', 'Пн–Вс: 10:00 – 21:00')
+    ] %}
+    <div class="glass rounded-2xl p-8 reveal hover:border-white/30 transition">
+      <div class="text-[10px] tracking-[0.4em] text-blue-200 uppercase mb-3">Шоурум</div>
+      <div class="font-serif text-2xl text-white mb-5">{{ city }}</div>
+
+      <div class="space-y-3 text-sm">
+        <div class="flex items-start gap-3 text-blue-100/80">
+          <span class="text-white mt-0.5">◈</span> {{ addr }}
+        </div>
+        <div class="flex items-start gap-3 text-blue-100/80">
+          <span class="text-white mt-0.5">☎</span> {{ phone }}
+        </div>
+        <div class="flex items-start gap-3 text-blue-100/80">
+          <span class="text-white mt-0.5">◷</span> {{ hours }}
+        </div>
+      </div>
+
+      <div class="mt-6 pt-5 border-t border-white/10">
+        <a href="#" class="text-[10px] tracking-[0.3em] text-blue-200 uppercase hover:text-white transition hover-underline">Построить маршрут →</a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Онлайн -->
+  <div class="glass rounded-3xl p-10 md:p-14 text-center reveal">
+    <div class="text-[10px] tracking-[0.5em] text-blue-200 uppercase mb-4">Онлайн</div>
+    <h2 class="font-serif text-3xl md:text-4xl text-white mb-6">Покупайте, не выходя из дома</h2>
+    <p class="text-blue-100/70 max-w-xl mx-auto mb-10 leading-relaxed">
+      Весь ассортимент доступен в нашем интернет-магазине. Доставка по всей России от 1 дня.
+    </p>
+    <a href="{{ url_for('catalog') }}" class="btn-primary inline-block px-10 py-4 text-xs tracking-[0.3em] uppercase font-semibold rounded-2xl">
+      <span>Перейти в каталог</span>
+    </a>
+  </div>
+
+</div>
+{% endblock %}

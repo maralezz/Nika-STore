@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Коллекции — NIKA Сантехника{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-6 py-12">
+
+  <div class="text-center mb-20">
+    <div class="text-[10px] tracking-[0.5em] text-blue-200 uppercase mb-4">2026</div>
+    <h1 class="font-serif text-5xl md:text-6xl text-white mb-6">Коллекции</h1>
+    <div class="gradient-line w-32 mx-auto"></div>
+    <p class="text-blue-100/70 max-w-2xl mx-auto mt-8 leading-relaxed">
+      Каждая коллекция NIKA — это законченное решение для вашей ванной комнаты.
+      Единый стиль, единая философия, единая гарнитура.
+    </p>
+  </div>
+
+  {% for cat_name, items in collections.items() %}
+  {% if items %}
+  <section class="mb-24">
+    <div class="flex items-end justify-between mb-10 reveal">
+      <div>
+        <div class="text-[10px] tracking-[0.5em] text-blue-200 uppercase mb-4">Коллекция</div>
+        <h2 class="font-serif text-3xl md:text-4xl text-white">{{ cat_name }}</h2>
+      </div>
+      <a href="{{ url_for('catalog', category=cat_name) }}"
+         class="text-[10px] tracking-[0.3em] text-blue-200 uppercase hover:text-white transition hover-underline hidden md:inline-block">
+        Смотреть всё →
+      </a>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-10">
+      {% for p in items %}
+        {% include '_product_card.html' %}
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+  {% endfor %}
+
+</div>
+{% endblock %}

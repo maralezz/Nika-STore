@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-md mx-auto px-6 py-20">
+  <div class="glass rounded-3xl p-10 reveal">
+    <div class="text-center mb-8">
+      <div class="font-serif text-3xl text-white mb-2">Регистрация</div>
+      <div class="text-[10px] tracking-[0.4em] text-blue-200 uppercase">новый клиент</div>
+    </div>
+    <form method="post" class="space-y-5">
+      <input name="name" placeholder="Имя"
+             class="w-full px-4 py-4 bg-ink-900/50 border border-white/10 text-white placeholder-blue-200/40 focus:border-white outline-none transition rounded-xl">
+      <input name="email" type="email" required placeholder="Email"
+             class="w-full px-4 py-4 bg-ink-900/50 border border-white/10 text-white placeholder-blue-200/40 focus:border-white outline-none transition rounded-xl">
+      <input name="password" type="password" required placeholder="Пароль (от 6 символов)"
+             class="w-full px-4 py-4 bg-ink-900/50 border border-white/10 text-white placeholder-blue-200/40 focus:border-white outline-none transition rounded-xl">
+      <button class="btn-primary w-full py-4 text-xs tracking-[0.3em] uppercase font-semibold rounded-xl">
+        <span>Создать аккаунт</span>
+      </button>
+    </form>
+    <div class="text-center text-[12px] text-blue-100/70 mt-8">
+      Уже есть аккаунт?
+      <a href="{{ url_for('login') }}" class="text-white hover-underline ml-1">Войти</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

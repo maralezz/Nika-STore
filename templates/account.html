@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-6xl mx-auto px-6 py-12">
+  <div class="mb-10">
+    <div class="text-[10px] tracking-[0.5em] text-blue-200 uppercase mb-4">Личный кабинет</div>
+    <h1 class="font-serif text-4xl md:text-5xl text-white">Привет, {{ current_user['name'] or current_user['email'] }}</h1>
+    <div class="gradient-line w-24 mt-6"></div>
+  </div>
+
+  <div class="grid md:grid-cols-3 gap-6">
+
+    <form method="post" action="{{ url_for('profile_update') }}"
+          class="glass rounded-2xl p-6 space-y-4 reveal">
+      <div class="text-[10px] tracking-[0.3em] text-blue-200 uppercase mb-2">Мои данные</div>
+      <div class="text-xs text-blue-200/70 mb-2">{{ current_user['email'] }}</div>
+      <input name="name" value="{{ current_user['name'] }}" placeholder="Имя"
+             class="w-full px-3 py-3 bg-ink-900/50 border border-white/10 text-white placeholder-blue-200/40 focus:border-white outline-none transition rounded-lg text-sm">
+      <input name="phone" value="{{ current_user['phone'] }}" placeholder="Телефон"
+             class="w-full px-3 py-3 bg-ink-900/50 border border-white/10 text-white placeholder-blue-200/40 focus:border-white outline-none transition rounded-lg text-sm">
+      <input name="address" value="{{ current_user['address'] }}" placeholder="Адрес доставки"
+             class="w-full px-3 py-3 bg-ink-900/50 border border-white/10 text-white placeholder-blue-200/40 focus:border-white outline-none transition rounded-lg text-sm">
+      <button class="btn-primary w-full py-3 text-[10px] tracking-[0.3em] uppercase font-semibold rounded-lg">
+        <span>Сохранить</span>
+      </button>
+      <a href="{{ url_for('logout') }}" class="block text-center text-[11px] text-blue-200/70 hover:text-white transition mt-2">Выйти из аккаунта</a>
+    </form>
+
+    <div class="md:col-span-2 space-y-6">
+      <div class="glass rounded-2xl p-6 reveal">
+        <div class="text-[10px] tracking-[0.3em] text-blue-200 uppercase mb-5">История заказов</div>
+        {% if orders %}
+        <div class="space-y-2">
+          {% for o in orders %}
+          <div class="flex items-center justify-between p-4 bg-ink-900/30 border border-white/5 hover:border-white/20 transition text-sm rounded-xl">
+            <div>
+              <div class="text-white font-medium">Заказ #{{ o['id'] }}</div>
+              <div class="text-[11px] text-blue-200/60 mt-1">{{ o['created_at'][:16] }}</div>
+            </div>
+            <div class="text-right">
+              <div class="text-white font-medium">{{ '{:,.0f}'.format(o['total']).replace(',',' ') }} ₽</div>
+              <span class="text-[10px] tracking-[0.2em] text-blue-100/70 uppercase">{{ o['status'] }}</span>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-sm text-blue-100/60 py-4">У вас пока нет заказов</div>
+        {% endif %}
+      </div>
+
+      <div class="glass rounded-2xl p-6 reveal">
+        <div class="text-[10px] tracking-[0.3em] text-blue-200 uppercase mb-5">Избранное</div>
+        {% if favorites %}
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          {% for p in favorites %}
+          <a href="{{ url_for('product', pid=p['id']) }}"
+             class="border border-white/5 hover:border-white/20 transition p-4 group rounded-xl">
+            <div class="text-4xl text-center mb-2 group-hover:scale-110 transition">{{ p['icon'] }}</div>
+            <div class="text-[12px] text-blue-100/80 line-clamp-2 group-hover:text-white transition">{{ p['name'] }}</div>
+            <div class="text-[12px] text-white font-medium mt-2">{{ '{:,.0f}'.format(p['price']).replace(',',' ') }} ₽</div>
+          </a>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-sm text-blue-100/60 py-4">Добавляйте товары в избранное — они появятся здесь</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
