@@ -1,0 +1,4 @@
+{
+  "project_type": "python_web",
+  "start_command": "gunicorn app:app"
+}
