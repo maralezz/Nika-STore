@@ -1,4 +1,3 @@
 {
-  "projectType": "python_web",
-  "startCommand": "gunicorn app:app"
+  "startCommand": "gunicorn app:app --host 0.0.0.0 --port $PORT"
 }
