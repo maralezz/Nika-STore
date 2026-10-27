@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% block title %}Прогресс чистки — NIKA{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto px-6 py-16">
+
+  <h1 class="font-serif text-3xl text-white mb-4">Прогресс чистки картинок</h1>
+  <p class="text-blue-200/60 text-sm mb-8">
+    Страница обновляется автоматически каждую секунду.
+  </p>
+
+  <div class="glass rounded-2xl p-8 space-y-6">
+
+    <div class="flex items-center gap-3">
+      <span id="stage-icon" class="text-2xl">⏳</span>
+      <div class="text-white text-lg" id="message">Загрузка...</div>
+    </div>
+
+    {# Основной прогресс #}
+    <div>
+      <div class="flex justify-between text-xs tracking-[0.2em] uppercase text-blue-200/60 mb-2">
+        <span>Общий прогресс</span>
+        <span id="total-label">0 / 0</span>
+      </div>
+      <div class="w-full h-3 rounded-full bg-ink-800 overflow-hidden border border-white/10">
+        <div id="bar-total" class="h-full bg-gradient-to-r from-sky-400 to-blue-500
+                                   transition-all duration-500"
+             style="width: 0%"></div>
+      </div>
+    </div>
+
+    {# Яндекс.Диски #}
+    <div>
+      <div class="flex justify-between text-xs tracking-[0.2em] uppercase text-blue-200/60 mb-2">
+        <span>Резолв Яндекс.Дисков</span>
+        <span id="yandex-label">0 / 0</span>
+      </div>
+      <div class="w-full h-2 rounded-full bg-ink-800 overflow-hidden border border-white/10">
+        <div id="bar-yandex" class="h-full bg-gradient-to-r from-emerald-400 to-teal-500
+                                    transition-all duration-500"
+             style="width: 0%"></div>
+      </div>
+    </div>
+
+    {# Статистика #}
+    <div class="grid grid-cols-3 gap-4 pt-4 border-t border-white/10 text-center">
+      <div>
+        <div class="text-xs tracking-[0.2em] uppercase text-blue-200/50 mb-1">Резолвнуто</div>
+        <div id="stat-resolved" class="text-2xl text-emerald-300 font-medium">0</div>
+      </div>
+      <div>
+        <div class="text-xs tracking-[0.2em] uppercase text-blue-200/50 mb-1">Ошибок</div>
+        <div id="stat-failed" class="text-2xl text-amber-300 font-medium">0</div>
+      </div>
+      <div>
+        <div class="text-xs tracking-[0.2em] uppercase text-blue-200/50 mb-1">Удалено</div>
+        <div id="stat-removed" class="text-2xl text-rose-300 font-medium">0</div>
+      </div>
+    </div>
+
+    <div class="pt-4 border-t border-white/10 flex items-center justify-between text-xs">
+      <div class="text-blue-200/50">
+        Прошло: <span id="elapsed" class="text-white">0с</span>
+      </div>
+      <div class="text-blue-200/50">
+        Осталось: <span id="eta" class="text-white">—</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="mt-8 flex gap-3">
+    <a href="{{ url_for('admin_stats') }}"
+       class="px-5 py-3 rounded-xl border border-white/20 text-blue-100 text-xs
+              tracking-[0.3em] uppercase hover:border-sky-300/60 hover:bg-sky-500/20
+              transition">
+      К статистике
+    </a>
+    <a href="{{ url_for('admin_fix_images') }}?async=1&resolve_yandex=1"
+       class="px-5 py-3 rounded-xl border border-white/20 text-blue-100 text-xs
+              tracking-[0.3em] uppercase hover:border-sky-300/60 hover:bg-sky-500/20
+              transition">
+      Запустить заново
+    </a>
+  </div>
+
+</div>
+
+<script>
+function fmtTime(sec) {
+  if (sec < 60) return Math.round(sec) + 'с';
+  const m = Math.floor(sec / 60);
+  const s = Math.round(sec % 60);
+  return m + 'м ' + s + 'с';
+}
+
+function updateUI(s) {
+  const total = s.total || 0;
+  const processed = s.processed || 0;
+  const ytotal = s.yandex_total || 0;
+  const ydone = s.yandex_done || 0;
+
+  const totalPct = total > 0 ? (processed / total) * 100 : 0;
+  const yPct = ytotal > 0 ? (ydone / ytotal) * 100 : 0;
+
+  document.getElementById('bar-total').style.width = totalPct + '%';
+  document.getElementById('bar-yandex').style.width = yPct + '%';
+
+  document.getElementById('total-label').textContent = processed + ' / ' + total;
+  document.getElementById('yandex-label').textContent = ydone + ' / ' + ytotal;
+
+  document.getElementById('stat-resolved').textContent = s.yandex_resolved || 0;
+  document.getElementById('stat-failed').textContent = s.yandex_failed || 0;
+  document.getElementById('stat-removed').textContent = s.removed || 0;
+
+  document.getElementById('message').textContent = s.message || '...';
+
+  const icon = document.getElementById('stage-icon');
+  if (s.stage === 'done') icon.textContent = '✅';
+  else if (s.stage === 'error') icon.textContent = '❌';
+  else if (s.stage === 'resolve') icon.textContent = '☁️';
+  else if (s.stage === 'apply') icon.textContent = '💾';
+  else if (s.stage === 'scan') icon.textContent = '🔍';
+  else icon.textContent = '⏳';
+
+  if (s.started_at) {
+    const elapsed = (s.finished_at || (Date.now() / 1000)) - s.started_at;
+    document.getElementById('elapsed').textContent = fmtTime(elapsed);
+
+    // ETA
+    if (!s.running && s.finished_at) {
+      document.getElementById('eta').textContent = 'готово';
+    } else if (yPct > 2 && ytotal > 0 && ydone < ytotal) {
+      const perItem = elapsed / ydone;
+      const remaining = (ytotal - ydone) * perItem;
+      document.getElementById('eta').textContent = fmtTime(remaining);
+    } else if (totalPct > 2 && total > 0 && processed < total) {
+      const perItem = elapsed / processed;
+      const remaining = (total - processed) * perItem;
+      document.getElementById('eta').textContent = fmtTime(remaining);
+    } else {
+      document.getElementById('eta').textContent = '—';
+    }
+  }
+}
+
+async function tick() {
+  try {
+    const r = await fetch('{{ url_for("admin_fix_images_progress") }}');
+    const s = await r.json();
+    updateUI(s);
+    // Если идёт — опрашиваем часто; если завершено — редко
+    setTimeout(tick, s.running ? 1000 : 5000);
+  } catch (e) {
+    setTimeout(tick, 3000);
+  }
+}
+
+tick();
+</script>
+{% endblock %}

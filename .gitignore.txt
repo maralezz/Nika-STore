@@ -1,0 +1,35 @@
+# Кэш Python
+__pycache__/
+_pycache_/
+*.pyc
+
+# Бэкапы баз
+*.db.bak
+*.db.old
+*копия*
+*backup*
+
+# Логи
+*.log
+excel_dump.txt
+
+# Разовые скрипты
+clean_*.py
+fix_*.py
+del_*.py
+kill_*.py
+patch.py
+update_app.py
+diag.py
+debug_excel.py
+brand_parsers.py
+
+# Excel
+*.xlsx
+*.xls
+заливки/
+
+# Системное
+.vscode/
+.idea/
+.DS_Store

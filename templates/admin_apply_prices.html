@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="max-width:900px;margin:40px auto;padding:20px;">
+  <div style="margin-bottom:20px;">
+    <a href="{{ url_for('admin_stats') }}" style="opacity:.7;">← К статистике</a>
+  </div>
+
+  <h1 style="font-size:32px;margin:0 0 8px;">Применение цен из Excel</h1>
+  <p style="opacity:.75;margin:0 0 24px;">
+    Загрузите файлы-прайсы или остатки. Из них будут вытащены пары
+    <code>Артикул → РРЦ/Цена</code>. Цены применятся к товарам с таким же SKU,
+    у которых сейчас цена = 0. <b>Новые товары НЕ создаются.</b>
+  </p>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div style="margin-bottom:20px;">
+      {% for cat, msg in messages %}
+        <div style="padding:10px 14px;margin-bottom:8px;border-radius:6px;
+                    background: {% if cat=='error' %}#7a1f1f
+                                {% elif cat=='warning' %}#7a5f1f
+                                {% elif cat=='success' %}#1f6a3a
+                                {% else %}#1f4a7a{% endif %};
+                    color:#fff;font-size:14px;">
+          {{ msg }}
+        </div>
+      {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <div style="padding:16px;background:#1a2340;border-radius:10px;margin-bottom:20px;
+              display:flex;gap:24px;">
+    <div><b>С ценой:</b> {{ with_price }}</div>
+    <div><b>Без цены:</b> {{ without_price }}</div>
+  </div>
+
+  <form method="post" enctype="multipart/form-data"
+        style="padding:24px;background:#1a2340;border-radius:10px;">
+    <label style="display:block;margin-bottom:12px;font-weight:600;">
+      Файлы (Excel/CSV), можно несколько:
+    </label>
+    <input type="file" name="files" multiple accept=".xls,.xlsx,.csv" required
+           style="display:block;width:100%;padding:10px;margin-bottom:20px;
+                  background:#0f1729;color:#fff;border:1px solid #2a3555;
+                  border-radius:6px;">
+
+    <button type="submit"
+            style="padding:12px 24px;background:#4b8bff;color:#fff;border:none;
+                   border-radius:6px;font-weight:600;cursor:pointer;font-size:15px;">
+      Загрузить и применить цены
+    </button>
+
+    <p style="margin-top:16px;opacity:.6;font-size:13px;">
+      Загружай сюда те же файлы-остатки (07 AQUAme, 04 Veconi, 05 Керамика и т.д.).
+      Товары не задвоятся — просто обновятся цены у тех, у кого они 0.
+    </p>
+  </form>
+</div>
+{% endblock %}

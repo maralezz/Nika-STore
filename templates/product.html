@@ -1,102 +1,545 @@
 {% extends 'base.html' %}
-{% block title %}{{ p['name'] }} — NIKA Сантехника{% endblock %}
+{% block title %}{{ product_display_name(p) }} — NIKA{% endblock %}
 {% block content %}
-<div class="max-w-7xl mx-auto px-6 py-12">
+<div class="max-w-6xl mx-auto px-6 py-12">
 
-  <nav class="text-[11px] tracking-[0.2em] text-blue-200/70 uppercase mb-10">
+  <nav class="text-[10px] tracking-[0.3em] uppercase text-blue-200/60 mb-8">
     <a href="{{ url_for('index') }}" class="hover:text-white transition">Главная</a>
-    <span class="mx-2 opacity-40">/</span>
-    <a href="{{ url_for('catalog', category=p['category']) }}" class="hover:text-white transition">{{ p['category'] }}</a>
-    <span class="mx-2 opacity-40">/</span>
-    <span class="text-white">{{ p['name'] }}</span>
+    <span class="mx-2">/</span>
+    <a href="{{ url_for('catalog') }}" class="hover:text-white transition">Каталог</a>
+    {% if p['category'] %}
+    <span class="mx-2">/</span>
+    <a href="{{ url_for('catalog', category=p['category']) }}"
+       class="hover:text-white transition">{{ p['category'] }}</a>
+    {% endif %}
   </nav>
 
   <div class="grid md:grid-cols-2 gap-12">
-    <div class="reveal">
-      <div class="aspect-square glass rounded-3xl flex items-center justify-center text-[12rem] relative overflow-hidden group">
-        <div class="opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700">
-          {{ p['icon'] }}
-        </div>
+
+    {# ───── Левая колонка: галерея ───── #}
+    <div>
+      <div id="galleryWrap"
+           class="aspect-square glass rounded-3xl overflow-hidden relative
+                  bg-gradient-to-br from-ink-800 via-ink-700 to-ink-900
+                  touch-pan-y select-none">
+
+        {% if p['images'] %}
+          <img id="layerA" src="{{ p['images'][0] }}" alt="{{ product_display_name(p) }}"
+               class="absolute inset-0 w-full h-full object-contain p-6"
+               style="opacity:1; transform:scale(1); filter:blur(0); will-change:opacity,transform,filter;">
+          <img id="layerB" src="" alt=""
+               class="absolute inset-0 w-full h-full object-contain p-6 pointer-events-none"
+               style="opacity:0; transform:scale(1.05); filter:blur(8px); will-change:opacity,transform,filter;">
+
+          {% if p['images']|length > 1 %}
+          <button type="button" onclick="prevImage()"
+                  class="absolute left-3 top-1/2 -translate-y-1/2 z-20
+                         w-11 h-11 rounded-full flex items-center justify-center
+                         bg-ink-800/60 backdrop-blur border border-white/10
+                         hover:bg-sky-500/30 hover:border-sky-300/70 hover:scale-110
+                         text-white/70 hover:text-white
+                         transition-all duration-300">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+          </button>
+          <button type="button" onclick="nextImage()"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 z-20
+                         w-11 h-11 rounded-full flex items-center justify-center
+                         bg-ink-800/60 backdrop-blur border border-white/10
+                         hover:bg-sky-500/30 hover:border-sky-300/70 hover:scale-110
+                         text-white/70 hover:text-white
+                         transition-all duration-300">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </button>
+
+          <div class="absolute top-4 right-4 z-20
+                      text-[10px] tracking-[0.3em] text-white/80
+                      px-3 py-1.5 rounded-full bg-ink-800/60 backdrop-blur border border-white/10">
+            <span id="photoCounter">1</span> / {{ p['images']|length }}
+          </div>
+
+          <div class="absolute bottom-4 left-1/2 -translate-x-1/2 z-20
+                      flex items-center gap-2 px-3 py-2 rounded-full
+                      bg-ink-800/40 backdrop-blur">
+            {% for u in p['images'][:10] %}
+            <button type="button" onclick="goToImage({{ loop.index0 }})"
+                    class="gallery-dot h-1.5 rounded-full transition-all duration-300
+                           {% if loop.first %}bg-sky-300 w-5{% else %}bg-white/40 hover:bg-white/70 w-1.5{% endif %}">
+            </button>
+            {% endfor %}
+          </div>
+          {% endif %}
+        {% else %}
+          <div class="w-full h-full flex items-center justify-center text-[10rem] opacity-90">
+            {{ p['icon'] or '🔧' }}
+          </div>
+        {% endif %}
+
         {% if p['is_new'] %}
-        <span class="absolute top-6 left-6 text-[10px] tracking-[0.3em] text-white border border-white/30 px-3 py-1.5 bg-ink-800/70 backdrop-blur rounded-full">NEW</span>
+        <span class="absolute top-5 left-5 z-20 text-[9px] tracking-[0.3em] text-white
+                     border border-white/30 px-2 py-1 bg-ink-800/70 backdrop-blur">NEW</span>
         {% endif %}
       </div>
+
+      {% if p['images'] and p['images']|length > 1 %}
+      <div class="grid grid-cols-5 gap-2 mt-3">
+        {% for u in p['images'][:10] %}
+        <button type="button"
+                data-img="{{ u }}"
+                data-idx="{{ loop.index0 }}"
+                onclick="goToImage({{ loop.index0 }})"
+                class="thumb-btn aspect-square rounded-xl overflow-hidden cursor-pointer
+                       border-2 transition-all duration-300 ease-out
+                       bg-gradient-to-br from-ink-800 to-ink-900
+                       hover:scale-105
+                       {% if loop.first %}border-sky-300/80 shadow-[0_0_22px_rgba(56,189,248,.55)] scale-105
+                       {% else %}border-white/10 hover:border-sky-300/50{% endif %}">
+          <img src="{{ u }}" class="w-full h-full object-contain p-2 pointer-events-none" loading="lazy">
+        </button>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {# ───── Схемы и документы ───── #}
+      {% if p['schemas'] %}
+      <div class="mt-5 glass rounded-2xl p-5">
+        <div class="flex items-center justify-between mb-4">
+          <div class="text-[10px] tracking-[0.3em] text-blue-200/70 uppercase">
+            Схемы и документы
+          </div>
+          <div class="text-[10px] tracking-[0.3em] text-blue-200/50 uppercase">
+            {{ p['schemas']|length }} шт.
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {% for url in p['schemas'] %}
+          {% set kind = schema_kind(url) %}
+          {% set fname = schema_name(url, loop.index0) %}
+          <a href="{{ url }}"
+             target="_blank"
+             rel="noopener noreferrer"
+             class="group/schema flex items-center gap-3 px-3 py-3 rounded-xl
+                    bg-ink-800/60 border border-white/10
+                    hover:bg-sky-500/15 hover:border-sky-300/60
+                    hover:shadow-[0_0_22px_rgba(56,189,248,.35)]
+                    transition-all duration-300">
+            <div class="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center
+                        {% if kind == 'pdf' %}bg-red-500/20 text-red-300 border border-red-400/40
+                        {% elif kind == 'dwg' %}bg-amber-500/20 text-amber-300 border border-amber-400/40
+                        {% elif kind == 'img' %}bg-sky-500/20 text-sky-300 border border-sky-400/40
+                        {% else %}bg-white/10 text-white/70 border border-white/20{% endif %}">
+              {% if kind == 'pdf' %}
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/>
+                </svg>
+              {% elif kind == 'dwg' %}
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                        d="M4 6h16M4 12h16M4 18h16M8 4v16M16 4v16"/>
+                </svg>
+              {% elif kind == 'img' %}
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+              {% else %}
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+              {% endif %}
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="text-xs text-white/90 truncate group-hover/schema:text-white
+                          transition-colors">
+                {{ fname }}
+              </div>
+              <div class="text-[9px] tracking-[0.25em] text-blue-200/60 uppercase mt-1
+                          group-hover/schema:text-sky-300/80 transition-colors">
+                {% if kind == 'pdf' %}PDF · открыть
+                {% elif kind == 'dwg' %}DWG · открыть
+                {% elif kind == 'img' %}Изображение · открыть
+                {% else %}Открыть в новой вкладке{% endif %}
+              </div>
+            </div>
+            <svg class="w-4 h-4 shrink-0 text-blue-200/40
+                        group-hover/schema:text-sky-300 group-hover/schema:translate-x-0.5
+                        transition-all duration-300"
+                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+            </svg>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
     </div>
 
-    <div class="reveal">
-      <div class="text-[10px] tracking-[0.4em] text-blue-200 uppercase mb-3">{{ p['brand'] }}</div>
-      <h1 class="font-serif text-3xl md:text-4xl text-white leading-tight mb-6">{{ p['name'] }}</h1>
+    {# ───── Правая колонка: инфо ───── #}
+    <div>
+      <div class="text-[10px] tracking-[0.4em] text-blue-200 uppercase mb-3">
+        {{ p['brand'] or 'Прочие' }}
+      </div>
+      
+      <h1 class="font-serif text-3xl md:text-4xl text-white leading-tight mb-4">
+        {{ product_display_name(p) }}
+      </h1>
 
-      <div class="flex items-baseline gap-4 mb-8">
-        <span class="text-4xl font-light text-white">{{ '{:,.0f}'.format(p['price']).replace(',',' ') }} ₽</span>
-        {% if p['old_price'] %}
-          <span class="text-lg text-blue-200/60 line-through">{{ '{:,.0f}'.format(p['old_price']).replace(',',' ') }} ₽</span>
-          <span class="bg-white text-ink-800 text-[10px] tracking-[0.2em] font-semibold px-2 py-1 uppercase rounded">−{{ ((1 - p['price']/p['old_price'])*100)|round|int }}%</span>
+      {# ───── НОВЫЙ БЛОК: Цветовые вариации ───── #}
+      {% if variations and variations|length > 1 %}
+      <div class="mb-6">
+        <div class="text-[10px] tracking-[0.3em] text-blue-200/70 uppercase mb-3">Доступные цвета</div>
+        <div class="flex flex-wrap gap-3">
+          {% for v in variations %}
+            {% set active = v['id'] == p['id'] %}
+            <a href="{{ url_for('product', pid=v['id']) }}" 
+               title="{{ v['color'] or 'Без цвета' }}"
+               class="relative w-10 h-10 rounded-full border-2 transition-all duration-300 flex items-center justify-center
+                      {% if active %}border-sky-300 scale-110 shadow-[0_0_15px_rgba(56,189,248,0.5)]{% else %}border-white/20 hover:border-sky-300/60{% endif %}">
+               
+               {% set c = (v['color'] or '').lower() %}
+               <!-- Кружок цвета -->
+               <div class="w-7 h-7 rounded-full border border-white/10 shadow-inner" 
+                    style="background-color: {% if 'хром' in c %}#c0c0c0{% elif 'золот' in c %}#ffd700{% elif 'черн' in c or 'графит' in c %}#222222{% elif 'белый' in c %}#ffffff{% elif 'бронз' in c %}#cd7f32{% elif 'медь' in c %}#b87333{% elif 'никель' in c %}#a0a0a0{% else %}#888888{% endif %};">
+               </div>
+            </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="flex items-end gap-4 mb-8 flex-wrap">
+        {% if p['price'] and p['price'] > 0 %}
+        <div class="text-3xl text-white font-medium">
+          {{ '{:,.0f}'.format(p['price']).replace(',',' ') }} ₽
+        </div>
+        {% else %}
+        <div class="text-xl text-blue-200/70">Цена по запросу</div>
+        {% endif %}
+        {% if p['old_price'] and p['price'] and p['old_price'] > p['price'] %}
+        <div class="text-lg text-blue-200/50 line-through">
+          {{ '{:,.0f}'.format(p['old_price']).replace(',',' ') }} ₽
+        </div>
+        <div class="text-[10px] tracking-[0.3em] text-ink-800 bg-sky-300
+                    px-2 py-1 font-semibold rounded">
+          −{{ ((1 - p['price']/p['old_price'])*100)|round|int }}%
+        </div>
         {% endif %}
       </div>
 
-      <div class="gradient-line mb-8"></div>
+      <div class="mb-8 glass rounded-2xl p-5 space-y-0 text-sm">
 
-      <p class="text-blue-100/80 mb-8 leading-relaxed">{{ p['description'] }}</p>
+        {% if p['sku'] %}
+        <div class="flex justify-between items-center border-b border-white/5 py-3">
+          <span class="text-blue-200/60 text-[10px] tracking-[0.3em] uppercase">Артикул</span>
+          <button type="button"
+                  onclick="copySku(this)"
+                  data-sku="{{ p['sku'] }}"
+                  title="Нажмите, чтобы скопировать"
+                  class="group/sku inline-flex items-center gap-2 px-3 py-1.5 rounded-lg
+                         border border-transparent
+                         hover:bg-sky-500/20 hover:border-sky-300/60
+                         hover:shadow-[0_0_18px_rgba(56,189,248,.45)]
+                         text-white font-mono tracking-wider
+                         transition-all duration-300 cursor-pointer">
+            <span class="js-sku-text">{{ p['sku'] }}</span>
+            <svg class="w-3.5 h-3.5 opacity-40 group-hover/sku:opacity-100 transition-opacity duration-300"
+                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+            </svg>
+          </button>
+        </div>
+        {% endif %}
 
-      <div class="grid grid-cols-2 gap-4 mb-8 text-sm">
-        <div class="glass rounded-xl p-4">
-          <div class="text-[10px] tracking-[0.3em] text-blue-200 uppercase mb-1">Материал</div>
-          <div class="text-white">{{ p['material'] or '—' }}</div>
+        {% if p['material'] %}
+        <div class="flex justify-between border-b border-white/5 py-3">
+          <span class="text-blue-200/60 text-[10px] tracking-[0.3em] uppercase">Материал</span>
+          <span class="text-white">{{ p['material'] }}</span>
         </div>
-        <div class="glass rounded-xl p-4">
-          <div class="text-[10px] tracking-[0.3em] text-blue-200 uppercase mb-1">Подключение</div>
-          <div class="text-white">{{ p['diameter'] or '—' }}</div>
+        {% endif %}
+
+        {% if p['color'] %}
+        <div class="flex justify-between border-b border-white/5 py-3">
+          <span class="text-blue-200/60 text-[10px] tracking-[0.3em] uppercase">Цвет</span>
+          <span class="text-white">{{ p['color'] }}</span>
         </div>
+        {% endif %}
+
+        {% if p['category'] %}
+        <div class="flex justify-between py-3">
+          <span class="text-blue-200/60 text-[10px] tracking-[0.3em] uppercase">Категория</span>
+          <a href="{{ url_for('catalog', category=p['category']) }}"
+             class="text-sky-300 hover:text-white transition">{{ p['category'] }}</a>
+        </div>
+        {% endif %}
       </div>
 
-      <div class="flex gap-3 mb-8">
-        <button onclick="addToCart({{ p['id'] }}); this.querySelector('span').textContent='✓ Добавлено в корзину'; setTimeout(()=>this.querySelector('span').textContent='В корзину', 2000);"
-                class="btn-primary flex-1 py-5 text-xs tracking-[0.3em] uppercase font-semibold rounded-2xl">
-          <span>В корзину</span>
-        </button>
-        <button onclick="toggleFav({{ p['id'] }}, this)" data-fav="{{ '1' if in_fav else '0' }}"
-                class="px-6 py-5 glass rounded-2xl hover:border-white/40 text-2xl transition">
-          {{ '❤️' if in_fav else '🤍' }}
-        </button>
+      {% if p['description'] %}
+      <div class="mb-8">
+        <div class="text-[10px] tracking-[0.3em] text-blue-200/70 uppercase mb-3">Описание</div>
+        <p class="text-blue-100/80 leading-relaxed">{{ p['description'] }}</p>
       </div>
+      {% endif %}
 
-      <div class="space-y-3 text-[12px] text-blue-100/70">
-        <div class="flex items-center gap-3"><span class="text-white">✓</span> Бесплатная доставка от 30 000 ₽</div>
-        <div class="flex items-center gap-3"><span class="text-white">✓</span> Гарантия 5 лет от производителя</div>
-        <div class="flex items-center gap-3"><span class="text-white">✓</span> Возврат в течение 30 дней</div>
+      <div class="flex gap-3 mb-6">
+        <form method="post" action="{{ url_for('cart_add', pid=p['id']) }}" class="flex-1">
+          <button type="submit"
+                  class="btn-primary w-full py-5 text-xs tracking-[0.3em] uppercase
+                         font-semibold rounded-2xl">
+            <span>В корзину</span>
+          </button>
+        </form>
+        <button type="button"
+                onclick="toggleFav({{ p['id'] }}, this)"
+                class="px-6 py-5 rounded-2xl border border-white/20
+                       hover:border-sky-300/60 hover:bg-sky-500/20 transition">
+          <span class="text-xl js-fav">{% if in_fav %}★{% else %}☆{% endif %}</span>
+        </button>
       </div>
     </div>
   </div>
 
-  {% if similar %}
-  <section class="mt-24">
-    <div class="mb-10 reveal">
-      <div class="text-[10px] tracking-[0.5em] text-blue-200 uppercase mb-4">Возможно понравится</div>
-      <h2 class="font-serif text-3xl text-white">Похожие товары</h2>
-    </div>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-10">
-      {% for p in similar %}{% include '_product_card.html' %}{% endfor %}
-    </div>
-  </section>
+  
+  {# ───── Характеристики из extra ───── #}
+  {% set ns = namespace(has_specs=false) %}
+  {% if p['extra'] %}
+    {% for key, val in p['extra'].items() %}
+      {% if not key.startswith('_') and not key.startswith('__') and key not in ['серия', 'цвет_названия', 'Серия', 'Цвет'] and val and val != '-' %}
+        {% set ns.has_specs = true %}
+      {% endif %}
+    {% endfor %}
   {% endif %}
+
+  {% if ns.has_specs %}
+  <div class="mt-16 glass rounded-3xl overflow-hidden">
+    <div class="px-8 py-5 border-b border-white/10 bg-white/5">
+      <h2 class="font-serif text-2xl text-white">Характеристики</h2>
+    </div>
+    <table class="w-full text-sm">
+      <tbody class="divide-y divide-white/5">
+        {% for key, val in p['extra'].items() %}
+          {% if not key.startswith('_') and not key.startswith('__') and key not in ['серия', 'цвет_названия', 'Серия', 'Цвет'] and val and val != '-' %}
+            <tr class="hover:bg-sky-500/10 transition-colors group">
+              <td class="px-8 py-4 text-blue-200/60 group-hover:text-sky-300/80 transition-colors w-1/3 capitalize">
+                {{ key | replace('_', ' ') }}
+              </td>
+              <td class="px-8 py-4 text-white font-medium">
+                {{ val }}
+              </td>
+            </tr>
+          {% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  {% if similar %}
+  <div class="mt-20">
+    <h2 class="font-serif text-2xl text-white mb-8">Похожие товары</h2>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+      {% for s in similar %}
+        {% with p = s %}
+          {% include '_product_card.html' %}
+        {% endwith %}
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
 </div>
 
 <script>
-async function toggleFav(pid, btn) {
-  {% if not current_user %}
-    location.href = "{{ url_for('login') }}"; return;
-  {% endif %}
-  const r = await fetch(`/favorites/toggle/${pid}`, {method:'POST'});
-  const d = await r.json();
-  btn.textContent = d.in_fav ? '❤️' : '🤍';
+/* ═══════════════════════════════════════════════════════════
+   Галерея — crossfade с blur
+   ═══════════════════════════════════════════════════════════ */
+const GALLERY = {
+  images: {{ (p['images'] or []) | tojson }},
+  current: 0,
+  layerA: null,
+  layerB: null,
+  showingA: true,
+  animating: false,
+  DURATION: 550,
+  EASE: 'cubic-bezier(0.22, 1, 0.36, 1)',
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  GALLERY.layerA = document.getElementById('layerA');
+  GALLERY.layerB = document.getElementById('layerB');
+  if (!GALLERY.layerA || !GALLERY.layerB) return;
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft')  { e.preventDefault(); prevImage(); }
+    if (e.key === 'ArrowRight') { e.preventDefault(); nextImage(); }
+  });
+
+  const wrap = document.getElementById('galleryWrap');
+  if (!wrap) return;
+  let startX = 0, startY = 0, dragging = false;
+  wrap.addEventListener('touchstart', (e) => {
+    if (e.touches.length !== 1) return;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    dragging = true;
+  }, { passive: true });
+  wrap.addEventListener('touchend', (e) => {
+    if (!dragging) return;
+    dragging = false;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - startX;
+    const dy = t.clientY - startY;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+      dx < 0 ? nextImage() : prevImage();
+    }
+  }, { passive: true });
+});
+
+function _applyThumbHighlight(idx) {
+  document.querySelectorAll('.thumb-btn').forEach((b, i) => {
+    if (i === idx) {
+      b.classList.remove('border-white/10');
+      b.classList.add('border-sky-300/80', 'shadow-[0_0_22px_rgba(56,189,248,.55)]', 'scale-105');
+    } else {
+      b.classList.remove('border-sky-300/80', 'shadow-[0_0_22px_rgba(56,189,248,.55)]', 'scale-105');
+      b.classList.add('border-white/10');
+    }
+  });
 }
 
-trackProduct(
-  {{ p['id'] }},
-  {{ p['name'] | tojson }},
-  {{ p['price'] }},
-  {{ p['icon'] | tojson }}
-);
+function _applyDotHighlight(idx) {
+  document.querySelectorAll('.gallery-dot').forEach((d, i) => {
+    if (i === idx) {
+      d.classList.add('bg-sky-300', 'w-5');
+      d.classList.remove('bg-white/40', 'w-1.5');
+    } else {
+      d.classList.remove('bg-sky-300', 'w-5');
+      d.classList.add('bg-white/40', 'w-1.5');
+    }
+  });
+}
+
+function _applyCounter(idx) {
+  const c = document.getElementById('photoCounter');
+  if (c) c.textContent = String(idx + 1);
+}
+
+function _applyTransition(el) {
+  el.style.transition =
+    `opacity ${GALLERY.DURATION}ms ${GALLERY.EASE}, ` +
+    `transform ${GALLERY.DURATION}ms ${GALLERY.EASE}, ` +
+    `filter ${GALLERY.DURATION}ms ${GALLERY.EASE}`;
+}
+
+function goToImage(idx) {
+  if (GALLERY.animating) return;
+  if (!GALLERY.images || GALLERY.images.length === 0) return;
+  if (idx < 0 || idx >= GALLERY.images.length) return;
+  if (idx === GALLERY.current) return;
+
+  const url = GALLERY.images[idx];
+  const showing = GALLERY.showingA ? GALLERY.layerA : GALLERY.layerB;
+  const hidden  = GALLERY.showingA ? GALLERY.layerB : GALLERY.layerA;
+
+  GALLERY.animating = true;
+
+  hidden.style.transition = 'none';
+  hidden.src = url;
+  hidden.style.opacity = '0';
+  hidden.style.transform = 'scale(1.05)';
+  hidden.style.filter = 'blur(8px)';
+
+  void hidden.offsetWidth;
+
+  const startAnim = () => {
+    _applyTransition(hidden);
+    _applyTransition(showing);
+
+    hidden.style.opacity = '1';
+    hidden.style.transform = 'scale(1)';
+    hidden.style.filter = 'blur(0)';
+
+    showing.style.opacity = '0';
+    showing.style.transform = 'scale(0.97)';
+    showing.style.filter = 'blur(3px)';
+  };
+
+  if (hidden.complete && hidden.naturalWidth > 0) {
+    startAnim();
+  } else {
+    let started = false;
+    const startOnce = () => {
+      if (started) return;
+      started = true;
+      startAnim();
+    };
+    hidden.onload = startOnce;
+    hidden.onerror = startOnce;
+    setTimeout(startOnce, 300);
+  }
+
+  setTimeout(() => {
+    GALLERY.showingA = !GALLERY.showingA;
+    GALLERY.current = idx;
+    GALLERY.animating = false;
+    _applyThumbHighlight(idx);
+    _applyDotHighlight(idx);
+    _applyCounter(idx);
+  }, GALLERY.DURATION);
+}
+
+function nextImage() {
+  if (!GALLERY.images || GALLERY.images.length < 2) return;
+  const n = GALLERY.images.length;
+  goToImage((GALLERY.current + 1) % n);
+}
+
+function prevImage() {
+  if (!GALLERY.images || GALLERY.images.length < 2) return;
+  const n = GALLERY.images.length;
+  goToImage((GALLERY.current - 1 + n) % n);
+}
+
+function copySku(btn) {
+  const text = btn.dataset.sku || '';
+  if (!text) return;
+  const span = btn.querySelector('.js-sku-text');
+  const old = span.textContent;
+  const done = () => {
+    span.textContent = 'Скопировано ✓';
+    btn.classList.add('bg-sky-500/30','border-sky-300/80');
+    setTimeout(() => {
+      span.textContent = old;
+      btn.classList.remove('bg-sky-500/30','border-sky-300/80');
+    }, 1500);
+  };
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(done).catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = text; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); done(); } catch(e){}
+      document.body.removeChild(ta);
+    });
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); done(); } catch(e){}
+    document.body.removeChild(ta);
+  }
+}
+
+function toggleFav(pid, btn) {
+  fetch('/favorites/toggle/' + pid, {method: 'POST', headers: {'X-Requested-With':'XMLHttpRequest'}})
+    .then(r => r.json())
+    .then(data => {
+      if (data.ok) btn.querySelector('.js-fav').textContent = data.in_fav ? '★' : '☆';
+    }).catch(() => {});
+}
 </script>
 {% endblock %}

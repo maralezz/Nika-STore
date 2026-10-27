@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Предпросмотр импорта — NIKA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+<div class="max-w-6xl mx-auto p-6">
+
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">👁 Предпросмотр импорта</h1>
+        <div class="flex gap-3">
+            <a href="/admin/import"
+               class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm">
+                📥 Импорт
+            </a>
+            <a href="/admin/stats"
+               class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 text-sm">
+                📊 Статистика
+            </a>
+            <a href="/"
+               class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">
+                ← На сайт
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+                Выберите файлы (можно сразу несколько, Ctrl+Click)
+            </label>
+            <input type="file"
+                   id="file-input"
+                   name="files"
+                   multiple
+                   accept=".xlsx,.xls,.csv"
+                   class="block w-full text-sm text-gray-700
+                          file:mr-4 file:py-2 file:px-4
+                          file:rounded file:border-0
+                          file:text-sm file:font-semibold
+                          file:bg-purple-600 file:text-white
+                          hover:file:bg-purple-700
+                          border border-gray-300 rounded p-2">
+            <p class="mt-2 text-xs text-gray-500">
+                💡 Предпросмотр <strong>не пишет в базу</strong> — только показывает результат.
+                Обрабатывает все файлы сразу и склеивает товары по SKU.
+            </p>
+        </div>
+
+        <button id="btn-preview"
+                class="px-5 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 font-semibold">
+            🔍 Предпросмотр
+        </button>
+    </div>
+
+    <div id="loading" class="hidden bg-white rounded-lg shadow p-6 mb-6">
+        <div class="flex items-center gap-3">
+            <svg class="animate-spin h-5 w-5 text-purple-600" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            <span class="text-gray-700 font-medium">Читаю файлы, парсю, склеиваю...</span>
+        </div>
+    </div>
+
+    <div id="error" class="hidden bg-red-100 border border-red-300 text-red-800 rounded-lg p-4 mb-6"></div>
+
+    <div id="summary" class="hidden bg-white rounded-lg shadow p-6 mb-6"></div>
+
+    <div id="examples" class="hidden bg-white rounded-lg shadow p-6 mb-6"></div>
+
+    <div id="result-wrapper" class="hidden bg-white rounded-lg shadow p-6">
+        <div class="flex items-center justify-between mb-3 flex-wrap gap-3">
+            <h2 class="text-lg font-semibold text-gray-800">Полный JSON предпросмотра</h2>
+            <div class="flex gap-2 flex-wrap">
+                <button id="btn-select-all"
+                        class="px-3 py-1.5 bg-gray-600 text-white rounded hover:bg-gray-700 text-sm font-semibold">
+                    🔲 Выделить всё
+                </button>
+                <button id="btn-copy"
+                        class="px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-semibold">
+                    📋 Скопировать
+                </button>
+                <button id="btn-download-json"
+                        class="px-3 py-1.5 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-semibold">
+                    💾 .json
+                </button>
+                <button id="btn-download-txt"
+                        class="px-3 py-1.5 bg-teal-600 text-white rounded hover:bg-teal-700 text-sm font-semibold">
+                    📄 .txt
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-yellow-50 border border-yellow-300 rounded p-3 mb-3 text-xs text-yellow-900">
+            💡 <strong>Если кнопка «Скопировать» не работает</strong> — клик по полю ниже,
+            затем <kbd class="bg-white border px-1 rounded">Ctrl</kbd>+<kbd class="bg-white border px-1 rounded">A</kbd>
+            → <kbd class="bg-white border px-1 rounded">Ctrl</kbd>+<kbd class="bg-white border px-1 rounded">C</kbd>.
+            Или нажми «Скачать .txt» и открой файл.
+        </div>
+
+        <textarea id="result"
+                  readonly
+                  spellcheck="false"
+                  class="w-full h-96 bg-gray-900 text-green-400 p-4 rounded text-xs font-mono resize-y whitespace-pre"
+                  placeholder="Здесь появится JSON..."></textarea>
+
+        <div id="copy-status" class="hidden mt-2 text-green-600 font-semibold text-sm">✓ Скопировано!</div>
+    </div>
+
+</div>
+
+<script>
+const input = document.getElementById('file-input');
+const btnPreview = document.getElementById('btn-preview');
+const btnCopy = document.getElementById('btn-copy');
+const btnSelectAll = document.getElementById('btn-select-all');
+const btnDownloadJson = document.getElementById('btn-download-json');
+const btnDownloadTxt = document.getElementById('btn-download-txt');
+const copyStatus = document.getElementById('copy-status');
+const loading = document.getElementById('loading');
+const errorBox = document.getElementById('error');
+const summaryBox = document.getElementById('summary');
+const examplesBox = document.getElementById('examples');
+const resultWrapper = document.getElementById('result-wrapper');
+const resultArea = document.getElementById('result');
+
+let lastJson = null;
+
+btnPreview.addEventListener('click', async () => {
+    errorBox.classList.add('hidden');
+    summaryBox.classList.add('hidden');
+    examplesBox.classList.add('hidden');
+    resultWrapper.classList.add('hidden');
+    copyStatus.classList.add('hidden');
+
+    if (!input.files || input.files.length === 0) {
+        errorBox.textContent = 'Выберите хотя бы один файл';
+        errorBox.classList.remove('hidden');
+        return;
+    }
+
+    const fd = new FormData();
+    for (const f of input.files) {
+        fd.append('files', f);
+    }
+
+    loading.classList.remove('hidden');
+
+    try {
+        const resp = await fetch('/admin/preview-file', {
+            method: 'POST',
+            body: fd
+        });
+        const data = await resp.json();
+        loading.classList.add('hidden');
+
+        if (!resp.ok || data.error) {
+            errorBox.textContent = data.error || ('Ошибка HTTP ' + resp.status);
+            errorBox.classList.remove('hidden');
+            return;
+        }
+
+        lastJson = data;
+
+        // Сводка
+        const stats = data.stats || {};
+        const files = data.files || [];
+        let sHtml = '<h2 class="text-lg font-semibold text-gray-800 mb-3">📊 Сводка</h2>';
+        sHtml += '<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">';
+        sHtml += `<div class="bg-blue-50 rounded p-3">
+            <div class="text-xs text-gray-600">Файлов</div>
+            <div class="text-2xl font-bold text-blue-700">${data.files_count || 0}</div>
+        </div>`;
+        sHtml += `<div class="bg-purple-50 rounded p-3">
+            <div class="text-xs text-gray-600">Уникальных SKU</div>
+            <div class="text-2xl font-bold text-purple-700">${stats.total_groups || 0}</div>
+        </div>`;
+        sHtml += `<div class="bg-green-50 rounded p-3">
+            <div class="text-xs text-gray-600">Склеено из 2+</div>
+            <div class="text-2xl font-bold text-green-700">${stats.merged_from_2plus || 0}</div>
+        </div>`;
+        sHtml += `<div class="bg-yellow-50 rounded p-3">
+            <div class="text-xs text-gray-600">С фото</div>
+            <div class="text-2xl font-bold text-yellow-700">${stats.with_images || 0}</div>
+        </div>`;
+        sHtml += `<div class="bg-teal-50 rounded p-3">
+            <div class="text-xs text-gray-600">С ценой</div>
+            <div class="text-2xl font-bold text-teal-700">${stats.with_price || 0}</div>
+        </div>`;
+        sHtml += `<div class="bg-pink-50 rounded p-3">
+            <div class="text-xs text-gray-600">Цен базовых</div>
+            <div class="text-2xl font-bold text-pink-700">${data.prices_base || 0}</div>
+        </div>`;
+        sHtml += `<div class="bg-red-50 rounded p-3">
+            <div class="text-xs text-gray-600">Цен акционных</div>
+            <div class="text-2xl font-bold text-red-700">${data.prices_promo || 0}</div>
+        </div>`;
+        sHtml += '</div>';
+
+        if (files.length) {
+            sHtml += '<h3 class="font-semibold text-gray-700 mb-2 mt-2">Файлы:</h3><ul class="space-y-1 text-sm">';
+            for (const f of files) {
+                if (f.error) {
+                    sHtml += `<li class="text-red-600">❌ ${f.name} — ${f.error}</li>`;
+                } else {
+                    sHtml += `<li class="text-green-700">✅ ${f.name} — листов: ${f.sheets_count}</li>`;
+                }
+            }
+            sHtml += '</ul>';
+        }
+        summaryBox.innerHTML = sHtml;
+        summaryBox.classList.remove('hidden');
+
+        // Примеры
+        const examples = data.merged_examples || [];
+        if (examples.length) {
+            let ex = '<h2 class="text-lg font-semibold text-gray-800 mb-3">🔎 Примеры товаров (после склейки)</h2>';
+            ex += '<div class="overflow-auto"><table class="min-w-full text-xs">';
+            ex += '<thead><tr class="bg-gray-100 text-left">';
+            ex += '<th class="p-2">SKU</th><th class="p-2">Название</th>';
+            ex += '<th class="p-2">Бренд</th><th class="p-2">Категория</th>';
+            ex += '<th class="p-2">Цена</th><th class="p-2">Серия</th>';
+            ex += '<th class="p-2">Цвет</th><th class="p-2">Фото</th>';
+            ex += '<th class="p-2">Источников</th>';
+            ex += '</tr></thead><tbody>';
+            for (const e of examples) {
+                const merged = e.merged_from > 1
+                    ? '<span class="px-2 py-0.5 bg-green-200 text-green-900 rounded font-bold">' + e.merged_from + '</span>'
+                    : '<span class="text-gray-400">1</span>';
+                ex += '<tr class="border-b hover:bg-gray-50">';
+                ex += `<td class="p-2 font-mono text-xs">${e.sku || '—'}</td>`;
+                ex += `<td class="p-2">${e.name || '—'}</td>`;
+                ex += `<td class="p-2">${e.brand || '—'}</td>`;
+                ex += `<td class="p-2">${e.category || '—'}</td>`;
+                ex += `<td class="p-2">${e.price || 0} ₽</td>`;
+                ex += `<td class="p-2 text-xs">${e['серия'] || '—'}</td>`;
+                ex += `<td class="p-2 text-xs">${e['цвет'] || '—'}</td>`;
+                ex += `<td class="p-2 text-center">${e.images_count || 0}</td>`;
+                ex += `<td class="p-2 text-xs">${merged}<br><span class="text-gray-500">${(e.sources || []).join('<br>')}</span></td>`;
+                ex += '</tr>';
+            }
+            ex += '</tbody></table></div>';
+            examplesBox.innerHTML = ex;
+            examplesBox.classList.remove('hidden');
+        }
+
+        // Полный JSON в textarea
+        resultArea.value = JSON.stringify(data, null, 2);
+        resultWrapper.classList.remove('hidden');
+
+    } catch (err) {
+        loading.classList.add('hidden');
+        errorBox.textContent = 'Ошибка: ' + err;
+        errorBox.classList.remove('hidden');
+    }
+});
+
+// ─── Выделить всё в textarea ─────────────────────────────
+btnSelectAll.addEventListener('click', () => {
+    resultArea.focus();
+    resultArea.select();
+    resultArea.setSelectionRange(0, resultArea.value.length);
+});
+
+// ─── Скопировать ─────────────────────────────────────────
+btnCopy.addEventListener('click', async () => {
+    const text = resultArea.value;
+    if (!text) return;
+
+    // Попытка 1: современный Clipboard API
+    let ok = false;
+    if (navigator.clipboard && window.isSecureContext) {
+        try {
+            await navigator.clipboard.writeText(text);
+            ok = true;
+        } catch (e) {
+            ok = false;
+        }
+    }
+
+    // Попытка 2: execCommand через текстарею
+    if (!ok) {
+        try {
+            resultArea.focus();
+            resultArea.select();
+            resultArea.setSelectionRange(0, text.length);
+            ok = document.execCommand('copy');
+        } catch (e) {
+            ok = false;
+        }
+    }
+
+    if (ok) {
+        copyStatus.textContent = '✓ Скопировано!';
+        copyStatus.className = 'mt-2 text-green-600 font-semibold text-sm';
+    } else {
+        copyStatus.textContent = '⚠️ Не удалось автоскопировать. Выдели текст (кнопка «Выделить всё») и нажми Ctrl+C.';
+        copyStatus.className = 'mt-2 text-yellow-600 font-semibold text-sm';
+    }
+    copyStatus.classList.remove('hidden');
+    setTimeout(() => copyStatus.classList.add('hidden'), 5000);
+});
+
+// ─── Скачать .json ───────────────────────────────────────
+btnDownloadJson.addEventListener('click', () => {
+    const text = resultArea.value;
+    if (!text) return;
+    const blob = new Blob([text], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'preview_' + Date.now() + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+});
+
+// ─── Скачать .txt ────────────────────────────────────────
+btnDownloadTxt.addEventListener('click', () => {
+    const text = resultArea.value;
+    if (!text) return;
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'preview_' + Date.now() + '.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+});
+</script>
+
+</body>
+</html>

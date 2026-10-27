@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Управление товарами — NIKA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+<div class="max-w-7xl mx-auto p-6">
+
+    <!-- Заголовок и кнопки навигации -->
+    <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+        <h1 class="text-2xl font-bold text-gray-800">🗂 Управление товарами</h1>
+        <div class="flex gap-2">
+            <a href="/admin/stats" class="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-800 text-sm transition">
+                ← Назад в статистику
+            </a>
+            <a href="/" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm transition">
+                🌐 На сайт
+            </a>
+        </div>
+    </div>
+
+    <!-- Уведомления -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="mb-4 space-y-2">
+                {% for category, message in messages %}
+                    <div class="p-3 rounded text-sm font-medium
+                        {% if category == 'success' %}bg-green-100 text-green-800 border border-green-300
+                        {% elif category == 'error' %}bg-red-100 text-red-800 border border-red-300
+                        {% elif category == 'warning' %}bg-yellow-100 text-yellow-800 border border-yellow-300
+                        {% else %}bg-blue-100 text-blue-800 border border-blue-300{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Панель поиска и фильтров -->
+    <div class="bg-white rounded-lg shadow p-4 mb-6">
+        <form id="filterForm" method="GET" action="{{ url_for('admin_manage') }}" class="flex flex-col gap-3">
+            
+            <div class="flex flex-wrap gap-2 items-center">
+                <input type="text" name="q" value="{{ q }}" placeholder="Поиск по названию, артикулу..." 
+                       class="flex-1 min-w-[250px] border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-blue-500">
+                
+                <!-- Чекбокс Без цены -->
+                <label class="flex items-center gap-2 cursor-pointer bg-gray-50 px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 transition">
+                    <input type="checkbox" name="no_price" value="1" {% if no_price %}checked{% endif %} 
+                           onchange="document.getElementById('filterForm').submit()" class="w-4 h-4 accent-red-500 cursor-pointer">
+                    <span class="text-sm font-medium text-gray-700">Без цены</span>
+                </label>
+
+                <!-- Чекбокс Без фото -->
+                <label class="flex items-center gap-2 cursor-pointer bg-gray-50 px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 transition">
+                    <input type="checkbox" name="no_photo" value="1" {% if no_photo %}checked{% endif %} 
+                           onchange="document.getElementById('filterForm').submit()" class="w-4 h-4 accent-blue-500 cursor-pointer">
+                    <span class="text-sm font-medium text-gray-700">Без фото</span>
+                </label>
+
+                <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition">
+                    🔍 Найти
+                </button>
+                
+                {% if q or no_price or no_photo %}
+                    <a href="{{ url_for('admin_manage') }}" class="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition text-sm">
+                        Сбросить всё
+                    </a>
+                {% endif %}
+            </div>
+            
+            <div class="text-sm text-gray-500">
+                Найдено: <b>{{ total_count }}</b> шт. 
+                {% if no_price %}<span class="text-red-500 ml-2">(фильтр: без цены)</span>{% endif %}
+                {% if no_photo %}<span class="text-blue-500 ml-2">(фильтр: без фото)</span>{% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- Основная форма для удаления -->
+    <form method="POST" action="{{ url_for('admin_manage') }}">
+        <input type="hidden" name="action" value="delete">
+        
+        <div class="bg-white rounded-lg shadow overflow-hidden mb-6">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm whitespace-nowrap">
+                    <thead class="bg-gray-50 border-b text-xs uppercase text-gray-500">
+                        <tr>
+                            <th class="px-4 py-3 w-12 text-center">
+                                <input type="checkbox" onclick="toggleAll(this)" class="w-4 h-4 accent-blue-600 cursor-pointer" title="Выбрать все">
+                            </th>
+                            <th class="px-4 py-3">Товар</th>
+                            <th class="px-4 py-3">Артикул</th>
+                            <th class="px-4 py-3">Бренд</th>
+                            <th class="px-4 py-3 text-right">Цена</th>
+                            <th class="px-4 py-3 text-center">Удалить</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        {% for p in products %}
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-4 py-3 text-center">
+                                <input type="checkbox" name="product_ids" value="{{ p.id }}" class="product-checkbox w-4 h-4 accent-blue-600 cursor-pointer">
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-gray-100 rounded border border-gray-200 flex items-center justify-center text-xl shrink-0 overflow-hidden">
+                                        {% set img = product_image(p) %}
+                                        {% if img %}
+                                            <img src="{{ img }}" class="w-full h-full object-contain">
+                                        {% else %}
+                                            <span class="text-red-400 text-xs text-center leading-tight">Нет<br>фото</span>
+                                        {% endif %}
+                                    </div>
+                                    <a href="/admin/product/{{ p.id }}" target="_blank" class="text-gray-800 hover:text-blue-600 transition line-clamp-2 max-w-md">
+                                        {{ p.name }}
+                                    </a>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 font-mono text-gray-500">{{ p.sku or '—' }}</td>
+                            <td class="px-4 py-3 text-gray-700">{{ p.brand }}</td>
+                            <td class="px-4 py-3 text-right font-medium {% if p.price <= 0 %}text-red-500{% endif %}">
+                                {% if p.price > 0 %}
+                                    {{ '{:,.0f}'.format(p.price).replace(',',' ') }} ₽
+                                {% else %}
+                                    Нет цены
+                                {% endif %}
+                            </td>
+                            
+                            <td class="px-4 py-3 text-center">
+                                <button type="submit" 
+                                        formaction="{{ url_for('admin_delete_product', pid=p.id) }}" 
+                                        formmethod="POST" 
+                                        onclick="return confirm('Вы уверены, что хотите удалить этот товар?');" 
+                                        class="text-red-400 hover:text-red-600 transition p-2 hover:bg-red-50 rounded-lg" 
+                                        title="Удалить товар">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            {% if not products %}
+            <div class="p-12 text-center text-gray-500">
+                По вашему запросу ничего не найдено
+            </div>
+            {% endif %}
+        </div>
+
+        {% if products %}
+        <div class="bg-red-50 border border-red-200 p-4 rounded-lg flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="text-sm text-red-700">
+                <b>Внимание!</b> Выбранные товары будут удалены навсегда.
+            </div>
+            <button type="submit" onclick="return confirm('Удалить ВСЕ выбранные товары?');" 
+                    class="bg-red-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-700 transition flex items-center gap-2 shadow-lg shadow-red-600/20 w-full sm:w-auto justify-center">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                Удалить выбранные
+            </button>
+        </div>
+        {% endif %}
+    </form>
+
+    <!-- Пагинация -->
+    {% if total_pages > 1 %}
+    <div class="mt-8 flex justify-center gap-2">
+        {% if page > 1 %}
+            <a href="{{ url_for('admin_manage', page=page-1, q=q, no_price=no_price, no_photo=no_photo) }}" class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-700">←</a>
+        {% endif %}
+        
+        <div class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 font-medium">
+            Страница {{ page }} из {{ total_pages }}
+        </div>
+
+        {% if page < total_pages %}
+            <a href="{{ url_for('admin_manage', page=page+1, q=q, no_price=no_price, no_photo=no_photo) }}" class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-700">→</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+</div>
+
+<script>
+// Функция "Выбрать все"
+function toggleAll(source) {
+    const checkboxes = document.querySelectorAll('.product-checkbox');
+    checkboxes.forEach(cb => cb.checked = source.checked);
+}
+</script>
+
+</body>
+</html>

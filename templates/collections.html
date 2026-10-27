@@ -1,40 +1,107 @@
 {% extends 'base.html' %}
-{% block title %}Коллекции — NIKA Сантехника{% endblock %}
+{% block title %}Коллекции — NIKA{% endblock %}
 {% block content %}
-<div class="max-w-7xl mx-auto px-6 py-12">
-
-  <div class="text-center mb-20">
-    <div class="text-[10px] tracking-[0.5em] text-blue-200 uppercase mb-4">2026</div>
-    <h1 class="font-serif text-5xl md:text-6xl text-white mb-6">Коллекции</h1>
-    <div class="gradient-line w-32 mx-auto"></div>
-    <p class="text-blue-100/70 max-w-2xl mx-auto mt-8 leading-relaxed">
-      Каждая коллекция NIKA — это законченное решение для вашей ванной комнаты.
-      Единый стиль, единая философия, единая гарнитура.
-    </p>
-  </div>
-
-  {% for cat_name, items in collections.items() %}
-  {% if items %}
-  <section class="mb-24">
-    <div class="flex items-end justify-between mb-10 reveal">
-      <div>
-        <div class="text-[10px] tracking-[0.5em] text-blue-200 uppercase mb-4">Коллекция</div>
-        <h2 class="font-serif text-3xl md:text-4xl text-white">{{ cat_name }}</h2>
-      </div>
-      <a href="{{ url_for('catalog', category=cat_name) }}"
-         class="text-[10px] tracking-[0.3em] text-blue-200 uppercase hover:text-white transition hover-underline hidden md:inline-block">
-        Смотреть всё →
-      </a>
+<div class="max-w-6xl mx-auto px-6 py-16">
+    <div class="text-center mb-16">
+        <div class="text-[10px] tracking-[0.4em] text-blue-200/60 uppercase mb-4">Категории</div>
+        <h1 class="font-serif text-4xl md:text-5xl text-white mb-6">Выберите своё</h1>
+        <div class="w-12 h-[1px] bg-sky-300/50 mx-auto"></div>
     </div>
 
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-10">
-      {% for p in items %}
-        {% include '_product_card.html' %}
-      {% endfor %}
-    </div>
-  </section>
-  {% endif %}
-  {% endfor %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for cat, images in collections.items() %}
+        <a href="{{ url_for('catalog', category=cat) }}" 
+           class="dynamic-slideshow-container group relative aspect-[4/3] rounded-3xl overflow-hidden bg-[#f1f5f9] border border-white/10 block cursor-pointer shadow-lg hover:shadow-sky-500/20 transition-shadow duration-500">
+            
+            <!-- Прогресс-бары (сделаны темными для светлого фона) -->
+            {% if images|length > 1 %}
+            <div class="absolute top-4 left-4 right-4 z-30 flex gap-1.5 h-1">
+                {% for img in images %}
+                <div class="flex-1 bg-black/10 rounded-full overflow-hidden">
+                    <div class="slide-bar h-full bg-[#0f172a] w-0" style="transition: width 0.1s linear;"></div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
 
+            <!-- Слайдшоу (Crossfade с блюром) -->
+            <div class="absolute inset-0 z-10">
+                {% if images %}
+                    {% for img in images %}
+                    <img src="{{ img }}" 
+                         class="slide-img absolute inset-0 w-full h-full object-contain p-8 transition-all duration-[1000ms] ease-in-out {% if loop.first %}opacity-100 scale-100 blur-0{% else %}opacity-0 scale-105 blur-md{% endif %}" 
+                         onerror="this.style.display='none'">
+                    {% endfor %}
+                {% else %}
+                    <div class="absolute inset-0 flex items-center justify-center text-6xl opacity-20 text-gray-500">🔧</div>
+                {% endif %}
+            </div>
+
+            <!-- Легкий градиент только внизу для читаемости текста -->
+            <div class="absolute bottom-0 inset-x-0 h-2/5 z-20 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none"></div>
+
+            <!-- Текст (Маленький и аккуратный, без плашки) -->
+            <div class="absolute bottom-5 left-5 right-5 z-30 flex justify-between items-end">
+                <div>
+                    <h3 class="font-serif text-lg text-white leading-tight drop-shadow-md group-hover:text-sky-200 transition-colors">
+                        {{ cat }}
+                    </h3>
+                    <div class="flex items-center gap-1 mt-1 text-[9px] tracking-[0.2em] text-white/70 uppercase group-hover:text-sky-300 transition-colors">
+                        <span>Смотреть</span>
+                        <span class="group-hover:translate-x-1 transition-transform duration-300">→</span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.dynamic-slideshow-container').forEach(container => {
+        const images = container.querySelectorAll('.slide-img');
+        const bars = container.querySelectorAll('.slide-bar');
+        if (images.length <= 1) return;
+
+        let current = 0;
+        let animationFrameId;
+        let lastTimestamp = 0;
+        let elapsed = 0;
+        const DURATION = 4000;
+
+        function updateProgress(timestamp) {
+            if (!lastTimestamp) lastTimestamp = timestamp;
+            elapsed += timestamp - lastTimestamp;
+            lastTimestamp = timestamp;
+
+            if (elapsed >= DURATION) {
+                current = (current + 1) % images.length;
+                images.forEach((img, i) => {
+                    if (i === current) {
+                        img.classList.remove('opacity-0', 'scale-105', 'blur-md');
+                        img.classList.add('opacity-100', 'scale-100', 'blur-0');
+                    } else {
+                        img.classList.add('opacity-0', 'scale-105', 'blur-md');
+                        img.classList.remove('opacity-100', 'scale-100', 'blur-0');
+                    }
+                });
+                bars.forEach((bar, i) => { bar.style.width = '0%'; });
+                elapsed = 0;
+            } else {
+                if (bars[current]) bars[current].style.width = `${(elapsed / DURATION) * 100}%`;
+            }
+            animationFrameId = requestAnimationFrame(updateProgress);
+        }
+
+        animationFrameId = requestAnimationFrame(updateProgress);
+
+        container.addEventListener('mouseenter', () => cancelAnimationFrame(animationFrameId));
+        container.addEventListener('mouseleave', () => {
+            lastTimestamp = 0;
+            animationFrameId = requestAnimationFrame(updateProgress);
+        });
+    });
+});
+</script>
 {% endblock %}

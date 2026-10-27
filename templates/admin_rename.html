@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="admin-wrap" style="max-width:900px;margin:40px auto;padding:20px;">
+  <div style="margin-bottom:20px;">
+    <a href="{{ url_for('admin_stats') }}" style="opacity:.7;">← К статистике</a>
+  </div>
+
+  <h1 style="font-size:32px;margin:0 0 8px;">Переименование товаров по PDF</h1>
+  <p style="opacity:.75;margin:0 0 24px;">
+    Загрузите PDF с таблицей «Артикул → Новое название».<br>
+    Названия товаров с совпадающим <code>SKU</code> будут обновлены автоматически.
+  </p>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div style="margin-bottom:20px;">
+      {% for cat, msg in messages %}
+        <div style="padding:10px 14px;margin-bottom:8px;border-radius:6px;
+                    background: {% if cat=='error' %}#7a1f1f
+                                {% elif cat=='warning' %}#7a5f1f
+                                {% elif cat=='success' %}#1f6a3a
+                                {% else %}#1f4a7a{% endif %};
+                    color:#fff;font-size:14px;">
+          {{ msg }}
+        </div>
+      {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <div style="padding:16px;background:#1a2340;border-radius:10px;margin-bottom:20px;
+              display:flex;gap:24px;">
+    <div><b>Всего товаров:</b> {{ total }}</div>
+    <div><b>Полотенцесушителей:</b> {{ total_towels }}</div>
+  </div>
+
+  <form method="post" enctype="multipart/form-data"
+        style="padding:24px;background:#1a2340;border-radius:10px;">
+    <label style="display:block;margin-bottom:12px;font-weight:600;">
+      PDF-файл с маппингом:
+    </label>
+    <input type="file" name="pdf" accept=".pdf" required
+           style="display:block;width:100%;padding:10px;margin-bottom:20px;
+                  background:#0f1729;color:#fff;border:1px solid #2a3555;
+                  border-radius:6px;">
+
+    <button type="submit"
+            style="padding:12px 24px;background:#4b8bff;color:#fff;border:none;
+                   border-radius:6px;font-weight:600;cursor:pointer;font-size:15px;">
+      Загрузить и применить
+    </button>
+
+    <p style="margin-top:16px;opacity:.6;font-size:13px;">
+      Парсер сам ищет в PDF колонки «Артикул» и «Новое название / Наименование».
+      Если найдёт меньше 10 записей — ничего не сломается, покажет отчёт.
+    </p>
+  </form>
+</div>
+{% endblock %}

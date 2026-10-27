@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="max-width:900px;margin:40px auto;padding:20px;">
+  <div style="margin-bottom:20px;">
+    <a href="{{ url_for('admin_stats') }}" style="opacity:.7;">← К статистике</a>
+  </div>
+
+  <h1 style="font-size:32px;margin:0 0 8px;">Замена слов в товарах</h1>
+  <p style="opacity:.75;margin:0 0 24px;">
+    Заменяет подстроки в названиях, описании, цвете и других полях.<br>
+    Формат строки: <code>OLD | NEW</code> (или <code>OLD → NEW</code>, или через табуляцию).<br>
+    Одна пара на строку. Регистр не важен, слово целиком (не внутри других слов).
+  </p>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div style="margin-bottom:20px;">
+      {% for cat, msg in messages %}
+        <div style="padding:10px 14px;margin-bottom:8px;border-radius:6px;
+                    background: {% if cat=='error' %}#7a1f1f
+                                {% elif cat=='warning' %}#7a5f1f
+                                {% elif cat=='success' %}#1f6a3a
+                                {% else %}#1f4a7a{% endif %};
+                    color:#fff;font-size:14px;">
+          {{ msg }}
+        </div>
+      {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <div style="padding:16px;background:#1a2340;border-radius:10px;margin-bottom:20px;
+              display:flex;gap:24px;flex-wrap:wrap;">
+    <div><b>Всего товаров:</b> {{ total }}</div>
+    <div><b>Полотенцесушителей:</b> {{ total_towels }}</div>
+  </div>
+
+  <form method="post" style="padding:24px;background:#1a2340;border-radius:10px;">
+    <label style="display:block;margin-bottom:8px;font-weight:600;">
+      Пары «Старое | Новое» (по одной в строке):
+    </label>
+    <textarea name="mapping" rows="16" style="width:100%;padding:12px;
+              background:#0f1729;color:#fff;border:1px solid #2a3555;
+              border-radius:6px;font-family:monospace;font-size:13px;
+              line-height:1.5;">{{ default_mapping }}</textarea>
+
+    <div style="margin:20px 0;">
+      <div style="font-weight:600;margin-bottom:8px;">Где заменять:</div>
+      <label style="display:block;margin-bottom:4px;">
+        <input type="checkbox" name="scope" value="name" checked> Название (name)
+      </label>
+      <label style="display:block;margin-bottom:4px;">
+        <input type="checkbox" name="scope" value="description" checked> Описание (description)
+      </label>
+      <label style="display:block;margin-bottom:4px;">
+        <input type="checkbox" name="scope" value="color" checked> Цвет (color)
+      </label>
+      <label style="display:block;margin-bottom:4px;">
+        <input type="checkbox" name="scope" value="material"> Материал (material)
+      </label>
+      <label style="display:block;margin-bottom:4px;">
+        <input type="checkbox" name="scope" value="extra"> Extra (JSON-поля)
+      </label>
+    </div>
+
+    <div style="margin:20px 0;">
+      <div style="font-weight:600;margin-bottom:8px;">Фильтр товаров:</div>
+      <label style="display:block;margin-bottom:4px;">
+        <input type="checkbox" name="only_towels" checked> Только «Полотенцесушители»
+      </label>
+    </div>
+
+    <div style="margin:20px 0;">
+      <label style="display:block;">
+        <input type="checkbox" name="dry_run" checked>
+        <b>Пробный прогон</b> (только посчитать, БЕЗ изменений в базе)
+      </label>
+    </div>
+
+    <button type="submit" style="padding:12px 24px;background:#4b8bff;color:#fff;
+            border:none;border-radius:6px;font-weight:600;cursor:pointer;font-size:15px;">
+      Применить
+    </button>
+  </form>
+</div>
+{% endblock %}

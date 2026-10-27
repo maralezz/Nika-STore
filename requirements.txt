@@ -1,3 +1,9 @@
 Flask
 Werkzeug
 gunicorn
+openpyxl
+xlrd
+requests
+beautifulsoup4
+Pillow
+reportlab

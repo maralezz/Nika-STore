@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Импорт товаров — NIKA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+<div class="max-w-4xl mx-auto p-6">
+
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">📥 Импорт товаров из Excel/CSV</h1>
+        <div class="flex gap-3">
+            <a href="/admin/preview-upload"
+               class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 text-sm">
+                👁 Предпросмотр
+            </a>
+            <a href="/admin/stats"
+               class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 text-sm">
+                📊 Статистика
+            </a>
+            <a href="/"
+               class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">
+                ← На сайт
+            </a>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="mb-4 space-y-2">
+                {% for category, message in messages %}
+                    <div class="p-3 rounded text-sm
+                        {% if category == 'success' %}bg-green-100 text-green-800 border border-green-300
+                        {% elif category == 'error' %}bg-red-100 text-red-800 border border-red-300
+                        {% elif category == 'warning' %}bg-yellow-100 text-yellow-800 border border-yellow-300
+                        {% else %}bg-blue-100 text-blue-800 border border-blue-300{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <div class="text-sm text-gray-600 mb-4">
+            В базе сейчас: <span class="font-bold text-blue-600">{{ total }}</span> товаров
+        </div>
+
+        <form method="POST" enctype="multipart/form-data" class="space-y-4">
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Файлы для импорта (можно выбрать сразу несколько)
+                </label>
+                <input type="file"
+                       name="files"
+                       multiple
+                       accept=".xlsx,.xls,.csv"
+                       class="block w-full text-sm text-gray-700
+                              file:mr-4 file:py-2 file:px-4
+                              file:rounded file:border-0
+                              file:text-sm file:font-semibold
+                              file:bg-blue-600 file:text-white
+                              hover:file:bg-blue-700
+                              border border-gray-300 rounded p-2">
+                <p class="mt-2 text-xs text-gray-500">
+                    💡 <strong>Склейка по SKU:</strong> если в одном файле товар с фото,
+                    а в другом — тот же SKU с ценой, при импорте они объединятся в один товар:
+                    фото + характеристики + цена.
+                </p>
+                <p class="mt-1 text-xs text-gray-500">
+                    Поддерживаются: <code>.xlsx</code>, <code>.xls</code>, <code>.csv</code>
+                </p>
+            </div>
+
+            <div class="flex items-center gap-3 p-3 bg-red-50 border border-red-200 rounded">
+                <input type="checkbox" name="clear" id="clear" class="w-4 h-4">
+                <label for="clear" class="text-sm text-red-700 font-medium cursor-pointer">
+                    ⚠️ Очистить базу перед импортом (удалит все текущие товары)
+                </label>
+            </div>
+
+            <button type="submit"
+                    class="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold text-lg">
+                📥 Импортировать
+            </button>
+        </form>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold text-gray-800 mb-3">ℹ️ Как это работает</h2>
+        <ol class="list-decimal list-inside space-y-2 text-sm text-gray-700">
+            <li>Загружаешь <strong>сразу несколько файлов</strong> (например, остатки + контент)</li>
+            <li>Парсер читает все листы каждого файла</li>
+            <li>Строки-маркеры серий (<code>AQM Tivoli</code>, <code>Aqm Trento</code> и т.п.)
+                автоматически отсеиваются — они не попадают в базу</li>
+            <li>Товары с одинаковым <strong>SKU</strong> из разных файлов склеиваются:
+                <ul class="list-disc list-inside ml-4 mt-1 space-y-1">
+                    <li>название — самое полное</li>
+                    <li>фото / схемы — объединяются</li>
+                    <li>цена — берётся самая большая ненулевая</li>
+                    <li>бренд / категория — первая не «Прочие»</li>
+                    <li>extra — мерджится по ключам</li>
+                </ul>
+            </li>
+            <li>Цены со служебных листов «РРЦ» / «Акция» применяются по SKU</li>
+        </ol>
+    </div>
+
+</div>
+
+</body>
+</html>

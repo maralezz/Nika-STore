@@ -1,42 +1,99 @@
-<div class="group reveal">
+<div class="group reveal product-card p-4 mb-4">
   <a href="{{ url_for('product', pid=p['id']) }}" class="block">
-    <div class="img-zoom aspect-[3/4] glass relative overflow-hidden">
-      <div class="w-full h-full flex items-center justify-center text-7xl opacity-80 group-hover:opacity-100 transition duration-500">
-        {{ p['icon'] }}
-      </div>
+    <div class="aspect-[3/4] glass relative overflow-hidden rounded-xl">
+
+      <div class="absolute inset-0 bg-gradient-to-br from-ink-800 via-ink-700 to-ink-900
+                  transition-opacity duration-500
+                  group-hover:opacity-0"></div>
+      <div class="absolute inset-0 opacity-0 bg-gradient-to-br from-sky-500 via-blue-600 to-indigo-700
+                  transition-opacity duration-500
+                  group-hover:opacity-100"></div>
+      <div class="absolute inset-0 ring-2 ring-inset ring-transparent
+                  group-hover:ring-sky-300/70 transition-all duration-500"></div>
+
+      {% set img = product_image(p) %}
+
+      {% if img %}
+        <img src="{{ img }}" alt="{{ product_display_name(p) }}"
+             loading="lazy"
+             class="absolute inset-0 w-full h-full object-contain z-10
+                    opacity-0 transition-opacity duration-700 ease-out"
+             onload="this.classList.remove('opacity-0'); this.classList.add('opacity-100');"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+
+        <div class="w-full h-full items-center justify-center text-7xl opacity-80 hidden absolute inset-0 z-10">
+          {{ p['icon'] or '🔧' }}
+        </div>
+      {% else %}
+        <div class="w-full h-full relative flex flex-col items-center justify-center z-10">
+          <div class="absolute inset-0 opacity-20"
+               style="background-image:
+                 radial-gradient(circle at 30% 20%, rgba(56,189,248,.5), transparent 60%),
+                 radial-gradient(circle at 70% 80%, rgba(139,92,246,.5), transparent 60%);"></div>
+          <div class="relative text-[7rem] leading-none select-none opacity-90">
+            {{ p['icon'] or '🔧' }}
+          </div>
+          <div class="relative mt-4 text-[9px] tracking-[0.4em] uppercase
+                      text-white/80 px-3 py-1 border border-white/20 rounded-full
+                      backdrop-blur bg-white/5 max-w-[80%] truncate">
+            {{ p['category'] or 'Товар' }}
+          </div>
+        </div>
+      {% endif %}
 
       {% if p['is_new'] %}
-      <span class="absolute top-4 left-4 text-[9px] tracking-[0.3em] text-white border border-white/30 px-2 py-1 bg-ink-800/70 backdrop-blur">NEW</span>
+      <span class="absolute top-4 left-4 z-20 text-[9px] tracking-[0.3em] text-white
+                   border border-white/30 px-2 py-1 bg-ink-800/70 backdrop-blur">NEW</span>
       {% endif %}
-      {% if p['old_price'] %}
-      <span class="absolute top-4 right-4 text-[9px] tracking-[0.3em] text-ink-800 bg-white px-2 py-1 font-semibold">
+      {% if p['old_price'] and p['price'] and p['old_price'] > p['price'] %}
+      <span class="absolute top-4 right-4 z-20 text-[9px] tracking-[0.3em] text-ink-800
+                   bg-white px-2 py-1 font-semibold shadow-sm">
         −{{ ((1 - p['price']/p['old_price'])*100)|round|int }}%
       </span>
       {% endif %}
 
-      <div class="absolute bottom-0 left-0 right-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-500">
+      <div class="absolute bottom-0 left-0 right-0 p-3 z-20
+                  translate-y-full group-hover:translate-y-0
+                  transition-transform duration-500 ease-out">
         <button onclick="event.preventDefault(); addToCart({{ p['id'] }}); this.textContent='✓ Добавлено'; setTimeout(()=>this.textContent='Быстрый заказ', 1500);"
-                class="w-full py-3 bg-white text-ink-800 text-[10px] tracking-[0.3em] uppercase font-semibold hover:bg-blue-300 hover:text-white transition">
+                class="w-full py-3 bg-white text-ink-800 text-[10px] tracking-[0.3em]
+                       uppercase font-semibold hover:bg-blue-300 hover:text-white transition
+                       shadow-lg">
           Быстрый заказ
         </button>
       </div>
     </div>
   </a>
 
-  <div class="pt-5 pb-2">
-    <div class="text-[9px] tracking-[0.3em] text-blue-200 uppercase mb-2">{{ p['brand'] }}</div>
+  <div class="pt-5 pb-2 px-1">
+    <div class="text-[9px] tracking-[0.3em] text-blue-200 uppercase mb-2
+                group-hover:text-sky-300 transition-colors duration-300">
+      {{ p['brand'] or 'Прочие' }}
+    </div>
     <a href="{{ url_for('product', pid=p['id']) }}" class="block">
-      <h3 class="font-serif text-lg leading-snug text-white group-hover:text-blue-200 transition mb-3 line-clamp-2">{{ p['name'] }}</h3>
+      <h3 class="font-serif text-lg leading-snug text-white
+                 group-hover:text-blue-200 transition mb-3 line-clamp-2">
+        {{ product_display_name(p) or 'Без названия' }}
+      </h3>
     </a>
     <div class="flex items-end justify-between">
       <div>
-        <div class="text-white font-medium tracking-wide">{{ '{:,.0f}'.format(p['price']).replace(',',' ') }} ₽</div>
-        {% if p['old_price'] %}
-        <div class="text-xs text-blue-200/60 line-through">{{ '{:,.0f}'.format(p['old_price']).replace(',',' ') }} ₽</div>
+        <div class="text-white font-medium tracking-wide">
+          {% if p['price'] and p['price'] > 0 %}
+            {{ '{:,.0f}'.format(p['price']).replace(',',' ') }} ₽
+          {% else %}
+            <span class="text-blue-200/60 text-sm">Цена по запросу</span>
+          {% endif %}
+        </div>
+        {% if p['old_price'] and p['price'] and p['old_price'] > p['price'] %}
+        <div class="text-xs text-blue-200/60 line-through">
+          {{ '{:,.0f}'.format(p['old_price']).replace(',',' ') }} ₽
+        </div>
         {% endif %}
       </div>
       <button onclick="addToCart({{ p['id'] }})"
-              class="text-[10px] tracking-[0.2em] uppercase border border-white/20 hover:border-white hover:bg-white hover:text-ink-800 px-3 py-2 transition">
+              class="text-[10px] tracking-[0.2em] uppercase border border-white/20
+                     hover:border-white hover:bg-white hover:text-ink-800 px-3 py-2 transition">
         В корзину
       </button>
     </div>

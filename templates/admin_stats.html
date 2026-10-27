@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Статистика — NIKA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+<div class="max-w-7xl mx-auto p-6">
+
+    <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+        <h1 class="text-2xl font-bold text-gray-800">📊 Статистика базы</h1>
+        <div class="flex gap-2 flex-wrap">
+            <a href="/admin/import"
+               class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm">
+                📥 Импорт
+            </a>
+            <a href="/admin/preview-upload"
+               class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 text-sm">
+                👁 Предпросмотр
+            </a>
+            <a href="/admin/deduplicate-skus"
+               class="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 text-sm">
+                🔀 Дедупликация
+            </a>
+            <a href="/admin/renormalize-categories"
+               class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">
+                🏷 Категории
+            </a>
+            <a href="/"
+               class="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-800 text-sm">
+                ← На сайт
+            </a>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="mb-4 space-y-2">
+                {% for category, message in messages %}
+                    <div class="p-3 rounded text-sm
+                        {% if category == 'success' %}bg-green-100 text-green-800 border border-green-300
+                        {% elif category == 'error' %}bg-red-100 text-red-800 border border-red-300
+                        {% elif category == 'warning' %}bg-yellow-100 text-yellow-800 border border-yellow-300
+                        {% else %}bg-blue-100 text-blue-800 border border-blue-300{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- ★ Карточки с общими цифрами -->
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="text-xs text-gray-500 mb-1">Всего товаров</div>
+            <div class="text-3xl font-bold text-gray-800">{{ total }}</div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="text-xs text-gray-500 mb-1">С ценой</div>
+            <div class="text-3xl font-bold text-green-600">{{ with_price }}</div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="text-xs text-gray-500 mb-1">Без цены</div>
+            <div class="text-3xl font-bold text-red-500">{{ without_price }}</div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="text-xs text-gray-500 mb-1">С фото</div>
+            <div class="text-3xl font-bold text-blue-600">{{ with_images }}</div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="text-xs text-gray-500 mb-1">Со схемами</div>
+            <div class="text-3xl font-bold text-purple-600">{{ with_schemas }}</div>
+        </div>
+    </div>
+
+    <!-- ★ Панель админских действий -->
+    <div class="bg-white rounded-lg shadow p-5 mb-6">
+        <h2 class="text-lg font-semibold text-gray-800 mb-3">🛠 Админ-действия</h2>
+        <div class="flex flex-wrap gap-3">
+
+            <!-- Удаление демо -->
+            {% if demo_count > 0 %}
+                <form method="POST" action="/admin/drop-demo"
+                      onsubmit="return confirm('Удалить {{ demo_count }} демо-товаров из базы?\n\nЭто тестовые товары (Grohe, Roca, Vitra и т.п.), не из Excel. Действие необратимо.');">
+                    <button type="submit"
+                            class="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 font-semibold">
+                        🗑 Удалить демо-товары ({{ demo_count }})
+                    </button>
+                </form>
+            {% else %}
+                <div class="px-4 py-2 bg-gray-100 text-gray-500 rounded border border-gray-200">
+                    ✅ Демо-товаров нет
+                </div>
+            {% endif %}
+
+            <!-- Другие действия -->
+            <a href="/admin/renormalize-categories"
+               class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                🏷 Пересчитать категории
+            </a>
+            <a href="/admin/rescrape-images-from-extra"
+               class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
+                🖼 Пересобрать фото из extra
+            </a>
+            <a href="/admin/rescrape-schemas"
+               class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
+                📄 Пересобрать схемы
+            </a>
+            <a href="/admin/replace-names"
+               class="px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-700">
+                ✏ Замена слов в названиях
+            </a>
+
+            <!-- НОВАЯ КНОПКА УПРАВЛЕНИЯ ТОВАРАМИ -->
+            <a href="/admin/manage"
+               class="px-4 py-2 bg-fuchsia-600 text-white rounded hover:bg-fuchsia-700 font-semibold shadow-sm">
+                🗂 Управление товарами
+            </a>
+
+            <a href="/admin/clear-all"
+               class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+                🗑 Очистить всю базу
+            </a>
+        </div>
+    </div>
+
+    <!-- ★ Таблица по категориям -->
+    <div class="bg-white rounded-lg shadow p-5 mb-6">
+        <h2 class="text-lg font-semibold text-gray-800 mb-3">📁 По категориям</h2>
+        <div class="overflow-auto">
+            <table class="min-w-full text-sm">
+                <thead>
+                    <tr class="bg-gray-100 text-left">
+                        <th class="p-2">Категория</th>
+                        <th class="p-2 text-right">Всего</th>
+                        <th class="p-2 text-right">С ценой</th>
+                        <th class="p-2 text-right">С фото</th>
+                        <th class="p-2 text-right">Со схемами</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in by_cat %}
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="p-2 font-medium">
+                                <a href="/catalog?category={{ r['category']|urlencode }}"
+                                   class="text-blue-600 hover:underline">
+                                    {{ r['category'] }}
+                                </a>
+                            </td>
+                            <td class="p-2 text-right">{{ r['total'] }}</td>
+                            <td class="p-2 text-right text-green-700">{{ r['with_price'] or 0 }}</td>
+                            <td class="p-2 text-right text-blue-700">{{ r['with_img'] or 0 }}</td>
+                            <td class="p-2 text-right text-purple-700">{{ r['with_schemas'] or 0 }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ★ Примеры товаров без цены -->
+    {% if no_price_sample %}
+        <div class="bg-white rounded-lg shadow p-5 mb-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-3">
+                ⚠️ Товары без цены (первые 50)
+            </h2>
+            <div class="overflow-auto">
+                <table class="min-w-full text-xs">
+                    <thead>
+                        <tr class="bg-gray-100 text-left">
+                            <th class="p-2">ID</th>
+                            <th class="p-2">SKU</th>
+                            <th class="p-2">Название</th>
+                            <th class="p-2">Категория</th>
+                            <th class="p-2">Бренд</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in no_price_sample %}
+                            <tr class="border-b hover:bg-gray-50">
+                                <td class="p-2">{{ p['id'] }}</td>
+                                <td class="p-2 font-mono">{{ p['sku'] or '—' }}</td>
+                                <td class="p-2">
+                                    <a href="/admin/product/{{ p['id'] }}"
+                                       class="text-blue-600 hover:underline">
+                                        {{ p['name'][:80] }}
+                                    </a>
+                                </td>
+                                <td class="p-2">{{ p['category'] }}</td>
+                                <td class="p-2">{{ p['brand'] }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- ★ Примеры товаров без фото -->
+    {% if no_img_sample %}
+        <div class="bg-white rounded-lg shadow p-5">
+            <h2 class="text-lg font-semibold text-gray-800 mb-3">
+                🖼 Товары без фото (первые 50)
+            </h2>
+            <div class="overflow-auto">
+                <table class="min-w-full text-xs">
+                    <thead>
+                        <tr class="bg-gray-100 text-left">
+                            <th class="p-2">ID</th>
+                            <th class="p-2">SKU</th>
+                            <th class="p-2">Название</th>
+                            <th class="p-2">Категория</th>
+                            <th class="p-2">Цена</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in no_img_sample %}
+                            <tr class="border-b hover:bg-gray-50">
+                                <td class="p-2">{{ p['id'] }}</td>
+                                <td class="p-2 font-mono">{{ p['sku'] or '—' }}</td>
+                                <td class="p-2">
+                                    <a href="/admin/product/{{ p['id'] }}"
+                                       class="text-blue-600 hover:underline">
+                                        {{ p['name'][:80] }}
+                                    </a>
+                                </td>
+                                <td class="p-2">{{ p['category'] }}</td>
+                                <td class="p-2">{{ p['price'] or 0 }} ₽</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% endif %}
+
+</div>
+
+</body>
+</html>

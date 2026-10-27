@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% block title %}Товар #{{ p.id }} — Админка{% endblock %}
+{% block content %}
+<div class="max-w-5xl mx-auto px-6 py-12 text-white">
+
+  <!-- Хлебные крошки и заголовок -->
+  <div class="mb-8">
+    <a href="{{ url_for('admin_stats') }}" class="text-sky-300 hover:text-white transition text-sm">← Назад в статистику</a>
+    <h1 class="font-serif text-3xl mt-4 leading-tight">{{ p.name }}</h1>
+    <div class="text-xs text-blue-200/60 mt-2 font-mono">
+      #{{ p.id }} · {{ p.brand }} · {{ p.category }}
+    </div>
+  </div>
+
+  <!-- Основные поля -->
+  <div class="glass rounded-2xl p-6 mb-6">
+    <div class="text-[10px] tracking-[0.3em] text-blue-200/60 uppercase mb-4">Основные поля</div>
+    <div class="space-y-3 text-sm">
+      <div class="grid grid-cols-3 border-b border-white/5 pb-2">
+        <span class="text-blue-200/50">name</span> <span class="col-span-2 font-medium">{{ p.name }}</span>
+      </div>
+      <div class="grid grid-cols-3 border-b border-white/5 pb-2">
+        <span class="text-blue-200/50">brand</span> <span class="col-span-2 font-medium">{{ p.brand }}</span>
+      </div>
+      <div class="grid grid-cols-3 border-b border-white/5 pb-2">
+        <span class="text-blue-200/50">category</span> <span class="col-span-2 font-medium">{{ p.category }}</span>
+      </div>
+      <div class="grid grid-cols-3 border-b border-white/5 pb-2">
+        <span class="text-blue-200/50">price</span> <span class="col-span-2 font-medium text-emerald-400">{{ p.price }} ₽</span>
+      </div>
+      <div class="grid grid-cols-3 border-b border-white/5 pb-2">
+        <span class="text-blue-200/50">sku</span> <span class="col-span-2 font-mono font-medium">{{ p.sku or '—' }}</span>
+      </div>
+      <div class="grid grid-cols-3 border-b border-white/5 pb-2">
+        <span class="text-blue-200/50">color</span> <span class="col-span-2 font-medium">{{ p.color or '—' }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ИСТОЧНИКИ ДАННЫХ -->
+  {% if p.extra and p.extra._sources %}
+  <div class="glass rounded-2xl p-6 mb-6 border border-sky-500/30">
+    <div class="text-[10px] tracking-[0.3em] text-sky-300 uppercase mb-4 flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+      Источники данных (откуда приехал товар)
+    </div>
+    <ul class="space-y-2 text-sm">
+      {% for src in p.extra._sources %}
+        <li class="flex items-center gap-3 bg-ink-800/50 px-4 py-3 rounded-lg border border-white/5">
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span class="font-mono text-white/90">{{ src }}</span>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  <!-- Картинки -->
+  <div class="glass rounded-2xl p-6 mb-6">
+    <div class="text-[10px] tracking-[0.3em] text-blue-200/60 uppercase mb-4">Картинки ({{ p.images|length if p.images else 0 }})</div>
+    {% if p.images %}
+      <div class="grid grid-cols-4 gap-4">
+        {% for img in p.images %}
+          <div class="aspect-square bg-ink-800 rounded-xl overflow-hidden p-2 border border-white/10">
+            <img src="{{ img }}" class="w-full h-full object-contain" onerror="this.src='{{ url_for('static', filename='placeholder.png') }}'">
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="text-red-400 text-sm">Картинок нет — колонка с URL не нашлась или была пустая.</div>
+    {% endif %}
+  </div>
+
+  <!-- EXTRA (все остальные колонки) -->
+  <div class="glass rounded-2xl p-6">
+    <div class="text-[10px] tracking-[0.3em] text-blue-200/60 uppercase mb-4">Extra (все колонки, которые не распознались)</div>
+    {% if p.extra %}
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+        {% for key, val in p.extra.items() %}
+          {% if key != '_sources' and val %}
+            <div class="flex justify-between border-b border-white/5 pb-2">
+              <span class="text-blue-200/50 truncate w-1/2">{{ key }}</span>
+              <span class="text-white/90 truncate w-1/2 text-right" title="{{ val }}">{{ val }}</span>
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="text-blue-200/50 text-sm">Extra пустой</div>
+    {% endif %}
+    
+    <!-- Сырой JSON для дебага (свернутый) -->
+    <details class="mt-6 text-xs text-blue-200/40">
+      <summary class="cursor-pointer hover:text-sky-300 transition">Показать сырой JSON</summary>
+      <pre class="bg-[#0f172a] p-4 rounded-xl mt-2 overflow-x-auto text-[10px]">{{ p.extra | tojson(indent=2) }}</pre>
+    </details>
+  </div>
+
+</div>
+{% endblock %}
